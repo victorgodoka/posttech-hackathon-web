@@ -36,22 +36,22 @@ export function TaskCard({
   const totalSteps = task.steps.length;
   const hasSteps = totalSteps > 0;
 
-  // Cores baseadas no estado
+  // Cores baseadas no estado (dark mode)
   const stateColors = {
     active: {
-      bg: 'bg-white',
-      border: 'border-gray-200',
-      hoverBorder: 'hover:border-indigo-200',
+      bg: 'bg-slate-700 dark:bg-slate-700',
+      border: 'border-slate-600 dark:border-slate-600',
+      hoverBorder: 'hover:border-indigo-500 dark:hover:border-indigo-500',
     },
     paused: {
-      bg: 'bg-amber-50',
-      border: 'border-amber-200',
-      hoverBorder: 'hover:border-amber-300',
+      bg: 'bg-amber-900/30 dark:bg-amber-900/30',
+      border: 'border-amber-700 dark:border-amber-700',
+      hoverBorder: 'hover:border-amber-600 dark:hover:border-amber-600',
     },
     done: {
-      bg: 'bg-green-50',
-      border: 'border-green-200',
-      hoverBorder: 'hover:border-green-300',
+      bg: 'bg-green-900/30 dark:bg-green-900/30',
+      border: 'border-green-700 dark:border-green-700',
+      hoverBorder: 'hover:border-green-600 dark:hover:border-green-600',
     },
   };
 
@@ -60,7 +60,7 @@ export function TaskCard({
   return (
     <div className={`p-3 ${colors.bg} border ${colors.border} rounded-lg group ${colors.hoverBorder} transition-colors`}>
       {/* Texto da tarefa */}
-      <p className={`text-sm text-gray-700 font-light mb-2 ${task.state === 'done' ? 'line-through text-gray-600' : ''}`}>
+      <p className={`text-base text-slate-200 dark:text-slate-200 font-normal mb-2 ${task.state === 'done' ? 'line-through text-slate-400 dark:text-slate-400' : ''}`}>
         {task.text}
       </p>
 
@@ -69,7 +69,7 @@ export function TaskCard({
         <div className="mb-3">
           <button
             onClick={() => setShowSteps(!showSteps)}
-            className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-700 font-light"
+            className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 font-normal"
           >
             <svg className={`w-3 h-3 transition-transform ${showSteps ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -88,8 +88,8 @@ export function TaskCard({
                 onClick={() => onToggleStep(task.id, step.id)}
                 className={`mt-0.5 w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-colors ${
                   step.completed
-                    ? 'bg-indigo-500 border-indigo-500'
-                    : 'border-gray-300 hover:border-indigo-400'
+                    ? 'bg-indigo-500 border-indigo-500 dark:bg-indigo-500 dark:border-indigo-500'
+                    : 'border-slate-500 hover:border-indigo-400 dark:border-slate-500 dark:hover:border-indigo-400'
                 }`}
               >
                 {step.completed && (
@@ -98,12 +98,12 @@ export function TaskCard({
                   </svg>
                 )}
               </button>
-              <span className={`text-xs flex-1 ${step.completed ? 'line-through text-gray-400' : 'text-gray-600'} font-light`}>
+              <span className={`text-sm flex-1 ${step.completed ? 'line-through text-slate-400 dark:text-slate-400' : 'text-slate-300 dark:text-slate-300'} font-normal`}>
                 {step.text}
               </span>
               <button
                 onClick={() => onRemoveStep(task.id, step.id)}
-                className="opacity-0 group-hover/step:opacity-100 text-gray-400 hover:text-gray-600 transition-opacity"
+                className="opacity-0 group-hover/step:opacity-100 text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 transition-opacity"
                 title="Remover passo"
               >
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -124,13 +124,13 @@ export function TaskCard({
             onChange={(e) => setStepInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAddStep()}
             placeholder="Próximo passo..."
-            className="w-full px-2 py-1 text-xs text-gray-700 font-light border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-300 bg-white"
+            className="w-full px-2 py-1 text-sm text-slate-100 dark:text-slate-100 font-normal border border-slate-600 dark:border-slate-600 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:focus:ring-indigo-500 bg-slate-600 dark:bg-slate-600"
             autoFocus
           />
           <div className="flex gap-2 mt-1">
             <button
               onClick={handleAddStep}
-              className="px-2 py-0.5 text-xs bg-indigo-500 hover:bg-indigo-600 text-white rounded transition-colors font-light"
+              className="px-2 py-0.5 text-sm bg-indigo-500 hover:bg-indigo-600 text-white rounded transition-colors font-normal"
             >
               Adicionar
             </button>
@@ -139,7 +139,7 @@ export function TaskCard({
                 setShowAddStep(false);
                 setStepInput('');
               }}
-              className="px-2 py-0.5 text-xs text-gray-500 hover:text-gray-700 transition-colors font-light"
+              className="px-2 py-0.5 text-sm text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 transition-colors font-normal"
             >
               Cancelar
             </button>
@@ -151,7 +151,7 @@ export function TaskCard({
       {showSteps && !showAddStep && (
         <button
           onClick={() => setShowAddStep(true)}
-          className="ml-2 mb-3 text-xs text-gray-400 hover:text-gray-600 font-light"
+          className="ml-2 mb-3 text-sm text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 font-normal"
         >
           + Adicionar passo
         </button>
@@ -164,7 +164,7 @@ export function TaskCard({
             setShowSteps(true);
             setShowAddStep(true);
           }}
-          className="mb-3 text-xs text-indigo-500 hover:text-indigo-600 font-light flex items-center gap-1"
+          className="mb-3 text-sm text-indigo-400 hover:text-indigo-300 dark:text-indigo-400 dark:hover:text-indigo-300 font-normal flex items-center gap-1"
         >
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -179,14 +179,14 @@ export function TaskCard({
           <>
             <button
               onClick={() => onUpdateState(task.id, 'paused')}
-              className="text-xs text-amber-600 hover:text-amber-700 font-light"
+              className="text-sm text-amber-400 hover:text-amber-300 dark:text-amber-400 dark:hover:text-amber-300 font-normal"
               title="Pausar"
             >
               Pausar
             </button>
             <button
               onClick={() => onUpdateState(task.id, 'done')}
-              className="text-xs text-green-600 hover:text-green-700 font-light"
+              className="text-sm text-green-400 hover:text-green-300 dark:text-green-400 dark:hover:text-green-300 font-normal"
               title="Concluir"
             >
               Concluir
@@ -197,14 +197,14 @@ export function TaskCard({
           <>
             <button
               onClick={() => onUpdateState(task.id, 'active')}
-              className="text-xs text-indigo-600 hover:text-indigo-700 font-light"
+              className="text-sm text-indigo-400 hover:text-indigo-300 dark:text-indigo-400 dark:hover:text-indigo-300 font-normal"
               title="Retomar"
             >
               Retomar
             </button>
             <button
               onClick={() => onUpdateState(task.id, 'done')}
-              className="text-xs text-green-600 hover:text-green-700 font-light"
+              className="text-sm text-green-400 hover:text-green-300 dark:text-green-400 dark:hover:text-green-300 font-normal"
               title="Concluir"
             >
               Concluir
@@ -214,7 +214,7 @@ export function TaskCard({
         {task.state === 'done' && (
           <button
             onClick={() => onUpdateState(task.id, 'active')}
-            className="text-xs text-indigo-600 hover:text-indigo-700 font-light"
+            className="text-sm text-indigo-400 hover:text-indigo-300 dark:text-indigo-400 dark:hover:text-indigo-300 font-normal"
             title="Reabrir"
           >
             Reabrir
@@ -222,7 +222,7 @@ export function TaskCard({
         )}
         <button
           onClick={() => onDelete(task.id)}
-          className="text-xs text-gray-400 hover:text-gray-600 font-light ml-auto"
+          className="text-sm text-slate-500 hover:text-slate-300 dark:text-slate-500 dark:hover:text-slate-300 font-normal ml-auto"
           title="Remover"
         >
           Remover

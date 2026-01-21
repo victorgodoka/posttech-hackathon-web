@@ -27,7 +27,7 @@ export default function WelcomePage() {
 
   if (!showChoice) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-900 to-slate-800 dark:from-slate-900 dark:to-slate-800">
         <div className="text-center">
           <Image
             src="/mindease.png"
@@ -37,7 +37,7 @@ export default function WelcomePage() {
             className="mx-auto mb-6"
             priority
           />
-          <h1 className="text-2xl font-light text-teal-500">
+          <h1 className="text-2xl font-light text-teal-400 dark:text-teal-400">
             MindEase
           </h1>
         </div>
@@ -46,7 +46,7 @@ export default function WelcomePage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-900 to-slate-800 dark:from-slate-900 dark:to-slate-800 px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-12">
           <Image
@@ -57,10 +57,10 @@ export default function WelcomePage() {
             className="mx-auto mb-4"
             priority
           />
-          <h2 className="text-2xl font-light text-teal-500 mb-8">
+          <h2 className="text-2xl font-light text-teal-400 dark:text-teal-400 mb-8">
             MindEase
           </h2>
-          <h1 className="text-2xl font-light text-gray-800 mb-3">
+          <h1 className="text-2xl font-light text-slate-100 dark:text-slate-100 mb-3">
             Vamos começar com calma.
           </h1>
         </div>
@@ -72,22 +72,22 @@ export default function WelcomePage() {
           >
             Continuar como convidado
           </button>
-          <p className="text-xs text-center text-gray-500 font-light px-4">
+          <p className="text-xs text-center text-slate-400 dark:text-slate-400 font-light px-4">
             Modo visitante • Sem necessidade de criar conta
           </p>
 
           <div className="relative py-4">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
+              <div className="w-full border-t border-slate-700 dark:border-slate-700"></div>
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="bg-gradient-to-b from-slate-50 to-slate-100 px-3 text-gray-400 font-light">ou</span>
+              <span className="bg-gradient-to-b from-slate-900 to-slate-800 dark:from-slate-900 dark:to-slate-800 px-3 text-slate-500 dark:text-slate-500 font-light">ou</span>
             </div>
           </div>
 
           <button
             onClick={() => router.push('/login')}
-            className="w-full bg-white hover:bg-gray-50 text-gray-600 py-3 px-6 rounded-lg border border-gray-200 transition-colors duration-200 text-sm font-light"
+            className="w-full bg-slate-800 hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-300 dark:text-slate-300 py-3 px-6 rounded-lg border border-slate-700 dark:border-slate-700 transition-colors duration-200 text-sm font-light"
           >
             Entrar com e-mail
           </button>

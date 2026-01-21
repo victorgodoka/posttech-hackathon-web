@@ -41,7 +41,7 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-300 transition-colors text-sm"
+          className="w-full px-4 py-3 border border-slate-600 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-500 transition-all font-light text-slate-100 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-400 bg-slate-700 dark:bg-slate-700"
           disabled={loading}
           placeholder="seu@email.com"
         />
@@ -58,16 +58,16 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
           onChange={(e) => setPassword(e.target.value)}
           required
           minLength={6}
-          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-300 transition-colors text-sm"
+          className="w-full px-4 py-3 border border-slate-600 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-500 transition-all font-light text-slate-100 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-400 bg-slate-700 dark:bg-slate-700"
           disabled={loading}
           placeholder="••••••"
         />
       </div>
 
       {message && (
-        <div className="text-gray-600 text-sm bg-gray-50 p-4 rounded-lg border border-gray-200">
+        <p className="text-sm text-slate-300 dark:text-slate-300 font-light text-center">
           {message}
-        </div>
+        </p>
       )}
 
       <button
@@ -79,13 +79,15 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
       </button>
 
       {onSwitchToRegister && (
-        <button
-          type="button"
-          onClick={onSwitchToRegister}
-          className="w-full text-sm text-gray-400 hover:text-gray-600 transition-colors font-light pt-2"
-        >
-          Ainda não tem conta?
-        </button>
+        <p className="text-center text-sm text-slate-400 dark:text-slate-400 font-light">
+          Não tem conta?{' '}
+          <button
+            onClick={onSwitchToRegister}
+            className="text-indigo-400 hover:text-indigo-300 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
+          >
+            Criar uma
+          </button>
+        </p>
       )}
     </form>
   );

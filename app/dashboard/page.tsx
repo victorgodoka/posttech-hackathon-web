@@ -101,8 +101,8 @@ export default function DashboardPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
-        <header className="bg-white/80 backdrop-blur-sm border-b border-gray-100">
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 dark:from-slate-900 dark:to-slate-800">
+        <header className="bg-slate-800/80 dark:bg-slate-800/80 backdrop-blur-sm border-b border-slate-700 dark:border-slate-700">
           <div className="max-w-5xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
             <div className="flex items-center gap-3">
               <Image
@@ -110,9 +110,14 @@ export default function DashboardPage() {
                 alt="MindEase"
                 width={32}
                 height={32}
-                className="object-contain"
+                className="rounded-lg"
               />
-              <h1 className="text-xl font-light text-gray-800">MindEase</h1>
+              <div>
+                <h1 className="text-lg font-medium text-teal-400 dark:text-teal-400">MindEase</h1>
+                {isGuest && (
+                  <p className="text-xs text-slate-400 dark:text-slate-400 font-normal">Modo visitante</p>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-4">
               {!isGuest && user && (
@@ -123,7 +128,7 @@ export default function DashboardPage() {
               )}
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg hover:bg-white/50 transition-colors font-light"
+                className="px-4 py-2 text-sm text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 border border-slate-600 dark:border-slate-600 rounded-lg hover:bg-slate-700/50 dark:hover:bg-slate-700/50 transition-colors font-light"
               >
                 Sair
               </button>
@@ -133,34 +138,34 @@ export default function DashboardPage() {
 
         <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
           <div className="mb-6">
-            <h2 className="text-2xl font-light text-gray-800 mb-2">Board Cognitivo</h2>
-            <p className="text-sm text-gray-500 font-light">
+            <h2 className="text-2xl font-medium text-slate-100 dark:text-slate-100 mb-2">Board Cognitivo</h2>
+            <p className="text-base text-slate-400 dark:text-slate-400 font-normal">
               Organize suas tarefas no seu ritmo
             </p>
           </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-16">
-              <p className="text-gray-400 font-light text-sm">Carregando...</p>
+              <p className="text-slate-400 dark:text-slate-400 font-normal text-base">Carregando...</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Coluna: Agora */}
-              <div className="bg-white/60 backdrop-blur-sm rounded-xl border border-gray-100 p-4">
+              <div className="bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-normal text-gray-700">Agora</h3>
-                  <span className="text-[10px] text-gray-300 font-light">{activeTasks.length}</span>
+                  <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Agora</h3>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-500 font-normal">{activeTasks.length}</span>
                 </div>
 
                 <div className="space-y-3 min-h-[400px]">
                   {activeTasks.length === 0 && !showAddTask ? (
                     <div className="flex flex-col items-center justify-center py-12">
-                      <p className="text-gray-400 font-light text-sm text-center mb-4">
+                      <p className="text-slate-400 dark:text-slate-400 font-normal text-base text-center mb-4">
                         Nada por aqui ainda
                       </p>
                       <button
                         onClick={() => setShowAddTask(true)}
-                        className="text-xs text-gray-500 hover:text-gray-700 font-light"
+                        className="text-sm text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 font-normal"
                       >
                         + Adicionar algo
                       </button>
@@ -180,20 +185,20 @@ export default function DashboardPage() {
                       ))}
 
                       {showAddTask ? (
-                        <div className="p-3 bg-white border border-indigo-200 rounded-lg">
+                        <div className="p-3 bg-slate-700 dark:bg-slate-700 border border-indigo-500 dark:border-indigo-500 rounded-lg">
                           <input
                             type="text"
                             value={taskInput}
                             onChange={(e) => setTaskInput(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
                             placeholder="O que está na sua cabeça?"
-                            className="w-full px-0 py-2 text-sm text-gray-700 font-light border-0 focus:outline-none focus:ring-0 bg-transparent placeholder-gray-400"
+                            className="w-full px-0 py-2 text-base text-slate-100 dark:text-slate-100 font-normal border-0 focus:outline-none focus:ring-0 bg-transparent placeholder-slate-400 dark:placeholder-slate-400"
                             autoFocus
                           />
                           <div className="flex gap-2 mt-2">
                             <button
                               onClick={handleAddTask}
-                              className="px-3 py-1 text-xs bg-indigo-500 hover:bg-indigo-600 text-white rounded transition-colors font-light"
+                              className="px-3 py-1 text-sm bg-indigo-500 hover:bg-indigo-600 text-white rounded transition-colors font-normal"
                             >
                               Adicionar
                             </button>
@@ -202,7 +207,7 @@ export default function DashboardPage() {
                                 setShowAddTask(false);
                                 setTaskInput('');
                               }}
-                              className="px-3 py-1 text-xs text-gray-500 hover:text-gray-700 transition-colors font-light"
+                              className="px-3 py-1 text-sm text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 transition-colors font-normal"
                             >
                               Cancelar
                             </button>
@@ -211,7 +216,7 @@ export default function DashboardPage() {
                       ) : (
                         <button
                           onClick={() => setShowAddTask(true)}
-                          className="w-full p-3 border border-dashed border-gray-200 rounded-lg text-gray-400 hover:text-gray-600 hover:border-gray-300 transition-colors font-light text-xs"
+                          className="w-full p-3 border border-dashed border-slate-600 dark:border-slate-600 rounded-lg text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 hover:border-slate-500 dark:hover:border-slate-500 transition-colors font-normal text-sm"
                         >
                           Adicionar mais uma
                         </button>
@@ -222,16 +227,16 @@ export default function DashboardPage() {
               </div>
 
               {/* Coluna: Pausado */}
-              <div className="bg-white/60 backdrop-blur-sm rounded-xl border border-gray-100 p-4">
+              <div className="bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-normal text-gray-700">Pausado</h3>
-                  <span className="text-[10px] text-gray-300 font-light">{pausedTasks.length}</span>
+                  <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Pausado</h3>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-500 font-normal">{pausedTasks.length}</span>
                 </div>
 
                 <div className="space-y-3 min-h-[400px]">
                   {pausedTasks.length === 0 ? (
                     <div className="flex items-center justify-center py-12">
-                      <p className="text-gray-400 font-light text-sm text-center">
+                      <p className="text-slate-400 dark:text-slate-400 font-normal text-base text-center">
                         Nenhuma tarefa pausada
                       </p>
                     </div>
@@ -252,16 +257,16 @@ export default function DashboardPage() {
               </div>
 
               {/* Coluna: Feito */}
-              <div className="bg-white/60 backdrop-blur-sm rounded-xl border border-gray-100 p-4">
+              <div className="bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-normal text-gray-700">Feito</h3>
-                  <span className="text-[10px] text-gray-300 font-light">{doneTasks.length}</span>
+                  <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Feito</h3>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-500 font-normal">{doneTasks.length}</span>
                 </div>
 
                 <div className="space-y-3 min-h-[400px]">
                   {doneTasks.length === 0 ? (
                     <div className="flex items-center justify-center py-12">
-                      <p className="text-gray-400 font-light text-sm text-center">
+                      <p className="text-slate-400 dark:text-slate-400 font-normal text-base text-center">
                         Nada aqui ainda — e tudo bem.
                       </p>
                     </div>
@@ -284,8 +289,8 @@ export default function DashboardPage() {
           )}
 
           {isGuest && tasks.length > 0 && (
-            <div className="mt-8 p-4 bg-indigo-50/50 border border-indigo-100 rounded-lg">
-              <p className="text-sm text-indigo-700 font-light text-center">
+            <div className="mt-8 p-4 bg-indigo-900/30 dark:bg-indigo-900/30 border border-indigo-700 dark:border-indigo-700 rounded-lg">
+              <p className="text-base text-indigo-300 dark:text-indigo-300 font-normal text-center">
                 Se quiser, você pode{' '}
                 <button
                   onClick={() => router.push('/login')}
