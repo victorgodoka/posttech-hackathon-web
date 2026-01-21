@@ -149,7 +149,7 @@ export default function DashboardPage() {
               <div className="bg-white/60 backdrop-blur-sm rounded-xl border border-gray-100 p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-normal text-gray-700">Agora</h3>
-                  <span className="text-xs text-gray-400 font-light">{activeTasks.length}</span>
+                  <span className="text-[10px] text-gray-300 font-light">{activeTasks.length}</span>
                 </div>
 
                 <div className="space-y-3 min-h-[400px]">
@@ -213,7 +213,7 @@ export default function DashboardPage() {
                           onClick={() => setShowAddTask(true)}
                           className="w-full p-3 border border-dashed border-gray-200 rounded-lg text-gray-400 hover:text-gray-600 hover:border-gray-300 transition-colors font-light text-xs"
                         >
-                          + Adicionar outra
+                          Adicionar mais uma
                         </button>
                       )}
                     </>
@@ -225,7 +225,7 @@ export default function DashboardPage() {
               <div className="bg-white/60 backdrop-blur-sm rounded-xl border border-gray-100 p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-normal text-gray-700">Pausado</h3>
-                  <span className="text-xs text-gray-400 font-light">{pausedTasks.length}</span>
+                  <span className="text-[10px] text-gray-300 font-light">{pausedTasks.length}</span>
                 </div>
 
                 <div className="space-y-3 min-h-[400px]">
@@ -255,14 +255,14 @@ export default function DashboardPage() {
               <div className="bg-white/60 backdrop-blur-sm rounded-xl border border-gray-100 p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-base font-normal text-gray-700">Feito</h3>
-                  <span className="text-xs text-gray-400 font-light">{doneTasks.length}</span>
+                  <span className="text-[10px] text-gray-300 font-light">{doneTasks.length}</span>
                 </div>
 
                 <div className="space-y-3 min-h-[400px]">
                   {doneTasks.length === 0 ? (
                     <div className="flex items-center justify-center py-12">
                       <p className="text-gray-400 font-light text-sm text-center">
-                        Nenhuma tarefa concluída
+                        Nada aqui ainda — e tudo bem.
                       </p>
                     </div>
                   ) : (
