@@ -98,6 +98,59 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleStartTimer(taskId: string) {
+    try {
+      await useCases.startTaskTimer.execute(taskId);
+      await loadTasks();
+    } catch (error) {
+      console.error('Erro ao iniciar timer:', error);
+    }
+  }
+
+  async function handlePauseTimer(taskId: string) {
+    try {
+      await useCases.pauseTaskTimer.execute(taskId);
+      await loadTasks();
+    } catch (error) {
+      console.error('Erro ao pausar timer:', error);
+    }
+  }
+
+  async function handleResetTimer(taskId: string) {
+    try {
+      await useCases.resetTaskTimer.execute(taskId);
+      await loadTasks();
+    } catch (error) {
+      console.error('Erro ao resetar timer:', error);
+    }
+  }
+
+  async function handleCompleteTimer(taskId: string) {
+    try {
+      await useCases.completeTimerCycle.execute(taskId);
+      await loadTasks();
+      
+      const task = tasks.find(t => t.id === taskId);
+      if (task?.timer.mode === 'break') {
+        showTransitionNotification('Ciclo completo! Hora de descansar.');
+      } else {
+        showTransitionNotification('Pausa terminada. Pronto para focar?');
+      }
+    } catch (error) {
+      console.error('Erro ao completar ciclo:', error);
+    }
+  }
+
+  function showTransitionNotification(message: string) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('MindEase', {
+        body: message,
+        icon: '/mindease.png',
+        tag: 'pomodoro',
+      });
+    }
+  }
+
   const [activeId, setActiveId] = useState<string | null>(null);
   
   const sensors = useSensors(
@@ -174,7 +227,7 @@ export default function DashboardPage() {
           <div className="mb-6">
             <h2 className="text-2xl font-medium text-slate-100 dark:text-slate-100 mb-2">Board Cognitivo</h2>
             <p className="text-base text-slate-400 dark:text-slate-400 font-normal">
-              Organize suas tarefas no seu ritmo
+              Foque em uma coisa por vez, sem sobrecarga
             </p>
           </div>
 
@@ -185,11 +238,20 @@ export default function DashboardPage() {
           ) : (
             <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Coluna: Agora */}
+              {/* Coluna: Foco */}
               <div className="bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Agora</h3>
+                  <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Foco</h3>
                 </div>
+
+                {/* Aviso suave de sobrecarga cognitiva */}
+                {activeTasks.length >= 2 && (
+                  <div className="mb-4 p-3 bg-amber-900/20 dark:bg-amber-900/20 border border-amber-700/50 dark:border-amber-700/50 rounded-lg">
+                    <p className="text-sm text-amber-300 dark:text-amber-300 font-normal">
+                      💡 Talvez seja mais confortável manter apenas uma tarefa em foco.
+                    </p>
+                  </div>
+                )}
 
                 <DroppableColumn id="active" items={activeTasks.map(t => t.id)}>
                   {activeTasks.length === 0 && !showAddTask ? (
@@ -206,7 +268,7 @@ export default function DashboardPage() {
                     </div>
                   ) : (
                     <>
-                      {activeTasks.map((task) => (
+                      {activeTasks.map((task, index) => (
                         <DraggableTaskCard
                           key={task.id}
                           task={task}
@@ -215,6 +277,11 @@ export default function DashboardPage() {
                           onAddStep={handleAddStep}
                           onToggleStep={handleToggleStep}
                           onRemoveStep={handleRemoveStep}
+                          onStartTimer={handleStartTimer}
+                          onPauseTimer={handlePauseTimer}
+                          onResetTimer={handleResetTimer}
+                          onCompleteTimer={handleCompleteTimer}
+                          isPrimaryFocus={index === 0}
                         />
                       ))}
 
@@ -260,17 +327,17 @@ export default function DashboardPage() {
                 </DroppableColumn>
               </div>
 
-              {/* Coluna: Pausado */}
+              {/* Coluna: Próximas */}
               <div className="bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Pausado</h3>
+                  <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Próximas</h3>
                 </div>
 
                 <DroppableColumn id="paused" items={pausedTasks.map(t => t.id)}>
                   {pausedTasks.length === 0 ? (
                     <div className="flex items-center justify-center py-12">
                       <p className="text-slate-400 dark:text-slate-400 font-normal text-base text-center">
-                        Nenhuma tarefa pausada
+                        Nada na fila ainda
                       </p>
                     </div>
                   ) : (
@@ -283,6 +350,10 @@ export default function DashboardPage() {
                         onAddStep={handleAddStep}
                         onToggleStep={handleToggleStep}
                         onRemoveStep={handleRemoveStep}
+                        onStartTimer={handleStartTimer}
+                        onPauseTimer={handlePauseTimer}
+                        onResetTimer={handleResetTimer}
+                        onCompleteTimer={handleCompleteTimer}
                       />
                     ))
                   )}
@@ -312,6 +383,10 @@ export default function DashboardPage() {
                         onAddStep={handleAddStep}
                         onToggleStep={handleToggleStep}
                         onRemoveStep={handleRemoveStep}
+                        onStartTimer={handleStartTimer}
+                        onPauseTimer={handlePauseTimer}
+                        onResetTimer={handleResetTimer}
+                        onCompleteTimer={handleCompleteTimer}
                       />
                     ))
                   )}

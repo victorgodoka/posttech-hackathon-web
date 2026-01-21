@@ -13,6 +13,11 @@ import { DeleteTask } from '@/app/_application/use-cases/DeleteTask';
 import { AddTaskStep } from '@/app/_application/use-cases/AddTaskStep';
 import { ToggleTaskStep } from '@/app/_application/use-cases/ToggleTaskStep';
 import { RemoveTaskStep } from '@/app/_application/use-cases/RemoveTaskStep';
+import { StartTaskTimer } from '@/app/_application/use-cases/StartTaskTimer';
+import { PauseTaskTimer } from '@/app/_application/use-cases/PauseTaskTimer';
+import { ResetTaskTimer } from '@/app/_application/use-cases/ResetTaskTimer';
+import { UpdateTaskTimer } from '@/app/_application/use-cases/UpdateTaskTimer';
+import { CompleteTimerCycle } from '@/app/_application/use-cases/CompleteTimerCycle';
 
 const userRepository = new UserRepositoryIDB();
 const authRepository = new AuthRepositoryIDB();
@@ -31,4 +36,9 @@ export const useCases = {
   addTaskStep: new AddTaskStep(taskRepository),
   toggleTaskStep: new ToggleTaskStep(taskRepository),
   removeTaskStep: new RemoveTaskStep(taskRepository),
+  startTaskTimer: new StartTaskTimer(taskRepository),
+  pauseTaskTimer: new PauseTaskTimer(taskRepository),
+  resetTaskTimer: new ResetTaskTimer(taskRepository),
+  updateTaskTimer: new UpdateTaskTimer(taskRepository),
+  completeTimerCycle: new CompleteTimerCycle(taskRepository),
 };

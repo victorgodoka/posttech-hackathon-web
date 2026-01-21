@@ -12,6 +12,11 @@ interface DraggableTaskCardProps {
   onAddStep: (taskId: string, stepText: string) => void;
   onToggleStep: (taskId: string, stepId: string) => void;
   onRemoveStep: (taskId: string, stepId: string) => void;
+  onStartTimer?: (taskId: string) => void;
+  onPauseTimer?: (taskId: string) => void;
+  onResetTimer?: (taskId: string) => void;
+  onCompleteTimer?: (taskId: string) => void;
+  isPrimaryFocus?: boolean;
 }
 
 export function DraggableTaskCard({
@@ -21,6 +26,11 @@ export function DraggableTaskCard({
   onAddStep,
   onToggleStep,
   onRemoveStep,
+  onStartTimer,
+  onPauseTimer,
+  onResetTimer,
+  onCompleteTimer,
+  isPrimaryFocus = true,
 }: DraggableTaskCardProps) {
   const {
     attributes,
@@ -47,6 +57,11 @@ export function DraggableTaskCard({
         onAddStep={onAddStep}
         onToggleStep={onToggleStep}
         onRemoveStep={onRemoveStep}
+        onStartTimer={onStartTimer}
+        onPauseTimer={onPauseTimer}
+        onResetTimer={onResetTimer}
+        onCompleteTimer={onCompleteTimer}
+        isPrimaryFocus={isPrimaryFocus}
       />
     </div>
   );

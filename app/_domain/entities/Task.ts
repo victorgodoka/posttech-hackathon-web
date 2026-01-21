@@ -6,12 +6,22 @@ export interface TaskStep {
   completed: boolean;
 }
 
+export type TimerMode = 'work' | 'break' | 'idle';
+
+export interface TaskTimer {
+  mode: TimerMode;
+  remainingSeconds: number;
+  isRunning: boolean;
+  startedAt?: number;
+}
+
 export interface TaskProps {
   id: string;
   text: string;
   state: TaskState;
   createdAt: Date;
   steps: TaskStep[];
+  timer?: TaskTimer;
 }
 
 export class Task {
@@ -24,6 +34,11 @@ export class Task {
       state: 'active',
       createdAt: new Date(),
       steps: [],
+      timer: {
+        mode: 'idle',
+        remainingSeconds: 25 * 60,
+        isRunning: false,
+      },
     });
   }
 
@@ -49,6 +64,14 @@ export class Task {
 
   get steps(): TaskStep[] {
     return this.props.steps;
+  }
+
+  get timer(): TaskTimer {
+    return this.props.timer || {
+      mode: 'idle',
+      remainingSeconds: 25 * 60,
+      isRunning: false,
+    };
   }
 
   updateText(newText: string): void {
@@ -87,6 +110,66 @@ export class Task {
     this.props.steps = this.props.steps.filter(s => s.id !== stepId);
   }
 
+  startTimer(): void {
+    if (!this.props.timer) {
+      this.props.timer = {
+        mode: 'work',
+        remainingSeconds: 25 * 60,
+        isRunning: true,
+        startedAt: Date.now(),
+      };
+    } else {
+      this.props.timer.isRunning = true;
+      this.props.timer.startedAt = Date.now();
+    }
+  }
+
+  pauseTimer(): void {
+    if (this.props.timer) {
+      this.props.timer.isRunning = false;
+      this.props.timer.startedAt = undefined;
+    }
+  }
+
+  resetTimer(): void {
+    const workDuration = 25 * 60;
+    const breakDuration = 5 * 60;
+    
+    if (!this.props.timer) {
+      this.props.timer = {
+        mode: 'idle',
+        remainingSeconds: workDuration,
+        isRunning: false,
+      };
+    } else {
+      this.props.timer.mode = 'idle';
+      this.props.timer.remainingSeconds = workDuration;
+      this.props.timer.isRunning = false;
+      this.props.timer.startedAt = undefined;
+    }
+  }
+
+  updateTimerSeconds(seconds: number): void {
+    if (this.props.timer) {
+      this.props.timer.remainingSeconds = seconds;
+    }
+  }
+
+  completeTimerCycle(): void {
+    if (!this.props.timer) return;
+
+    if (this.props.timer.mode === 'work') {
+      this.props.timer.mode = 'break';
+      this.props.timer.remainingSeconds = 5 * 60;
+    } else if (this.props.timer.mode === 'break') {
+      this.props.timer.mode = 'work';
+      this.props.timer.remainingSeconds = 25 * 60;
+    }
+    
+    this.props.timer.isRunning = false;
+    this.props.timer.startedAt = undefined;
+  }
+
   toJSON() {
     return {
       id: this.props.id,
@@ -94,6 +177,7 @@ export class Task {
       state: this.props.state,
       createdAt: this.props.createdAt.toISOString(),
       steps: this.props.steps,
+      timer: this.props.timer,
     };
   }
 
@@ -104,6 +188,11 @@ export class Task {
       state: data.state,
       createdAt: new Date(data.createdAt),
       steps: data.steps || [],
+      timer: data.timer || {
+        mode: 'idle',
+        remainingSeconds: 25 * 60,
+        isRunning: false,
+      },
     });
   }
 }

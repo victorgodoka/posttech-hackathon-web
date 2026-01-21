@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useCases } from '@/app/_infrastructure/di/container';
+import { useAuth } from '@/app/_components/AuthProvider';
 
 type StartMode = 'calm' | 'focused' | 'organize';
 
@@ -11,6 +12,7 @@ export default function WelcomePage() {
   const [showChoice, setShowChoice] = useState(false);
   const [selectedMode, setSelectedMode] = useState<StartMode | null>(null);
   const router = useRouter();
+  const { refresh } = useAuth();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -22,6 +24,7 @@ export default function WelcomePage() {
 
   async function handleContinue(mode?: StartMode) {
     await useCases.continueAsGuest.execute();
+    await refresh();
     router.push('/dashboard');
   }
 

@@ -1,7 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Task, TaskState, TaskStep } from '@/app/_domain/entities/Task';
+import { PomodoroTimer } from './PomodoroTimer';
 
 interface TaskCardProps {
   task: Task;
@@ -10,6 +13,11 @@ interface TaskCardProps {
   onAddStep: (taskId: string, stepText: string) => void;
   onToggleStep: (taskId: string, stepId: string) => void;
   onRemoveStep: (taskId: string, stepId: string) => void;
+  onStartTimer?: (taskId: string) => void;
+  onPauseTimer?: (taskId: string) => void;
+  onResetTimer?: (taskId: string) => void;
+  onCompleteTimer?: (taskId: string) => void;
+  isPrimaryFocus?: boolean;
 }
 
 export function TaskCard({
@@ -19,6 +27,11 @@ export function TaskCard({
   onAddStep,
   onToggleStep,
   onRemoveStep,
+  onStartTimer,
+  onPauseTimer,
+  onResetTimer,
+  onCompleteTimer,
+  isPrimaryFocus = true,
 }: TaskCardProps) {
   const [showSteps, setShowSteps] = useState(false);
   const [showAddStep, setShowAddStep] = useState(false);
@@ -44,9 +57,9 @@ export function TaskCard({
       hoverBorder: 'hover:border-indigo-500 dark:hover:border-indigo-500',
     },
     paused: {
-      bg: 'bg-amber-900/30 dark:bg-amber-900/30',
-      border: 'border-amber-700 dark:border-amber-700',
-      hoverBorder: 'hover:border-amber-600 dark:hover:border-amber-600',
+      bg: 'bg-slate-800/60 dark:bg-slate-800/60',
+      border: 'border-slate-600/50 dark:border-slate-600/50',
+      hoverBorder: 'hover:border-slate-500 dark:hover:border-slate-500',
     },
     done: {
       bg: 'bg-emerald-900/20 dark:bg-emerald-900/20',
@@ -63,6 +76,27 @@ export function TaskCard({
       <p className={`text-base text-slate-200 dark:text-slate-200 font-normal mb-2 ${task.state === 'done' ? 'line-through text-slate-400 dark:text-slate-400' : ''}`}>
         {task.text}
       </p>
+
+      {/* Timer Pomodoro - apenas para tarefa principal em foco */}
+      {task.state === 'active' && isPrimaryFocus && onStartTimer && onPauseTimer && onResetTimer && onCompleteTimer && (
+        <PomodoroTimer
+          taskId={task.id}
+          timer={task.timer}
+          onStart={onStartTimer}
+          onPause={onPauseTimer}
+          onReset={onResetTimer}
+          onComplete={onCompleteTimer}
+        />
+      )}
+
+      {/* Estado de aguardando - tarefas secundárias em foco */}
+      {task.state === 'active' && !isPrimaryFocus && (
+        <div className="mb-3 p-2 bg-slate-800/30 dark:bg-slate-800/30 rounded border border-slate-600/30 dark:border-slate-600/30">
+          <p className="text-xs text-slate-400 dark:text-slate-400 font-normal text-center">
+            Aguardando
+          </p>
+        </div>
+      )}
 
       {/* Indicador de progresso dos passos */}
       {hasSteps && (
@@ -180,9 +214,9 @@ export function TaskCard({
             <button
               onClick={() => onUpdateState(task.id, 'paused')}
               className="text-sm text-amber-400 hover:text-amber-300 dark:text-amber-400 dark:hover:text-amber-300 font-normal"
-              title="Pausar"
+              title="Mover para Próximas"
             >
-              Pausar
+              Mover para Próximas
             </button>
             <button
               onClick={() => onUpdateState(task.id, 'done')}
@@ -198,9 +232,9 @@ export function TaskCard({
             <button
               onClick={() => onUpdateState(task.id, 'active')}
               className="text-sm text-indigo-400 hover:text-indigo-300 dark:text-indigo-400 dark:hover:text-indigo-300 font-normal"
-              title="Retomar"
+              title="Trazer para Foco"
             >
-              Retomar
+              Trazer para Foco
             </button>
             <button
               onClick={() => onUpdateState(task.id, 'done')}
