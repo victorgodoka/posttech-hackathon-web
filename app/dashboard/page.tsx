@@ -8,6 +8,9 @@ import { useRouter } from 'next/navigation';
 import { useCases } from '@/app/_infrastructure/di/container';
 import { Task, TaskState } from '@/app/_domain/entities/Task';
 import { TaskCard } from '@/app/_components/TaskCard';
+import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DraggableTaskCard } from '@/app/_components/DraggableTaskCard';
+import { DroppableColumn } from '@/app/_components/DroppableColumn';
 
 export default function DashboardPage() {
   const { user, isGuest, logout } = useAuth();
@@ -95,9 +98,40 @@ export default function DashboardPage() {
     }
   }
 
+  const [activeId, setActiveId] = useState<string | null>(null);
+  
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
+
   const activeTasks = tasks.filter(t => t.state === 'active');
   const pausedTasks = tasks.filter(t => t.state === 'paused');
   const doneTasks = tasks.filter(t => t.state === 'done');
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    setActiveId(null);
+
+    if (!over) return;
+
+    const taskId = active.id as string;
+    const newState = over.id as TaskState;
+
+    const task = tasks.find(t => t.id === taskId);
+    if (!task || task.state === newState) return;
+
+    await handleUpdateTaskState(taskId, newState);
+  }
+
+  function handleDragStart(event: any) {
+    setActiveId(event.active.id);
+  }
+
+  const activeTask = activeId ? tasks.find(t => t.id === activeId) : null;
 
   return (
     <ProtectedRoute>
@@ -149,6 +183,7 @@ export default function DashboardPage() {
               <p className="text-slate-400 dark:text-slate-400 font-normal text-base">Carregando...</p>
             </div>
           ) : (
+            <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Coluna: Agora */}
               <div className="bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
@@ -156,7 +191,7 @@ export default function DashboardPage() {
                   <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Agora</h3>
                 </div>
 
-                <div className="space-y-3 min-h-[400px]">
+                <DroppableColumn id="active" items={activeTasks.map(t => t.id)}>
                   {activeTasks.length === 0 && !showAddTask ? (
                     <div className="flex flex-col items-center justify-center py-12">
                       <p className="text-slate-400 dark:text-slate-400 font-normal text-base text-center mb-4">
@@ -172,7 +207,7 @@ export default function DashboardPage() {
                   ) : (
                     <>
                       {activeTasks.map((task) => (
-                        <TaskCard
+                        <DraggableTaskCard
                           key={task.id}
                           task={task}
                           onUpdateState={handleUpdateTaskState}
@@ -222,7 +257,7 @@ export default function DashboardPage() {
                       )}
                     </>
                   )}
-                </div>
+                </DroppableColumn>
               </div>
 
               {/* Coluna: Pausado */}
@@ -231,7 +266,7 @@ export default function DashboardPage() {
                   <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Pausado</h3>
                 </div>
 
-                <div className="space-y-3 min-h-[400px]">
+                <DroppableColumn id="paused" items={pausedTasks.map(t => t.id)}>
                   {pausedTasks.length === 0 ? (
                     <div className="flex items-center justify-center py-12">
                       <p className="text-slate-400 dark:text-slate-400 font-normal text-base text-center">
@@ -240,7 +275,7 @@ export default function DashboardPage() {
                     </div>
                   ) : (
                     pausedTasks.map((task) => (
-                      <TaskCard
+                      <DraggableTaskCard
                         key={task.id}
                         task={task}
                         onUpdateState={handleUpdateTaskState}
@@ -251,7 +286,7 @@ export default function DashboardPage() {
                       />
                     ))
                   )}
-                </div>
+                </DroppableColumn>
               </div>
 
               {/* Coluna: Feito */}
@@ -260,7 +295,7 @@ export default function DashboardPage() {
                   <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Feito</h3>
                 </div>
 
-                <div className="space-y-3 min-h-[400px]">
+                <DroppableColumn id="done" items={doneTasks.map(t => t.id)}>
                   {doneTasks.length === 0 ? (
                     <div className="flex items-center justify-center py-12">
                       <p className="text-slate-400 dark:text-slate-400 font-normal text-base text-center">
@@ -269,7 +304,7 @@ export default function DashboardPage() {
                     </div>
                   ) : (
                     doneTasks.map((task) => (
-                      <TaskCard
+                      <DraggableTaskCard
                         key={task.id}
                         task={task}
                         onUpdateState={handleUpdateTaskState}
@@ -280,9 +315,25 @@ export default function DashboardPage() {
                       />
                     ))
                   )}
-                </div>
+                </DroppableColumn>
               </div>
             </div>
+            
+            <DragOverlay>
+              {activeTask ? (
+                <div className="opacity-80">
+                  <TaskCard
+                    task={activeTask}
+                    onUpdateState={() => {}}
+                    onDelete={() => {}}
+                    onAddStep={() => {}}
+                    onToggleStep={() => {}}
+                    onRemoveStep={() => {}}
+                  />
+                </div>
+              ) : null}
+            </DragOverlay>
+            </DndContext>
           )}
 
           {isGuest && tasks.length > 0 && (
