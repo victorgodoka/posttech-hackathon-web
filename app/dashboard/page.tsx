@@ -154,7 +154,6 @@ export default function DashboardPage() {
               <div className="bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Agora</h3>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-500 font-normal">{activeTasks.length}</span>
                 </div>
 
                 <div className="space-y-3 min-h-[400px]">
@@ -230,7 +229,6 @@ export default function DashboardPage() {
               <div className="bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Pausado</h3>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-500 font-normal">{pausedTasks.length}</span>
                 </div>
 
                 <div className="space-y-3 min-h-[400px]">
@@ -260,7 +258,6 @@ export default function DashboardPage() {
               <div className="bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Feito</h3>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-500 font-normal">{doneTasks.length}</span>
                 </div>
 
                 <div className="space-y-3 min-h-[400px]">

@@ -49,16 +49,16 @@ export function TaskCard({
       hoverBorder: 'hover:border-amber-600 dark:hover:border-amber-600',
     },
     done: {
-      bg: 'bg-green-900/30 dark:bg-green-900/30',
-      border: 'border-green-700 dark:border-green-700',
-      hoverBorder: 'hover:border-green-600 dark:hover:border-green-600',
+      bg: 'bg-emerald-900/20 dark:bg-emerald-900/20',
+      border: 'border-emerald-800/50 dark:border-emerald-800/50',
+      hoverBorder: 'hover:border-emerald-700/60 dark:hover:border-emerald-700/60',
     },
   };
 
   const colors = stateColors[task.state];
 
   return (
-    <div className={`p-3 ${colors.bg} border ${colors.border} rounded-lg group ${colors.hoverBorder} transition-colors`}>
+    <div className={`p-3 ${colors.bg} border ${colors.border} rounded-lg group ${colors.hoverBorder} transition-all duration-300 ease-out animate-fade-slide-in`}>
       {/* Texto da tarefa */}
       <p className={`text-base text-slate-200 dark:text-slate-200 font-normal mb-2 ${task.state === 'done' ? 'line-through text-slate-400 dark:text-slate-400' : ''}`}>
         {task.text}
