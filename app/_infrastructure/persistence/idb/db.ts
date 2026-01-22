@@ -28,6 +28,10 @@ interface MindEaseDB extends DBSchema {
       createdAt: string;
     };
   };
+  preferences: {
+    key: string;
+    value: any;
+  };
 }
 
 let dbInstance: IDBPDatabase<MindEaseDB> | null = null;
@@ -37,7 +41,7 @@ export async function getDB(): Promise<IDBPDatabase<MindEaseDB>> {
     return dbInstance;
   }
 
-  dbInstance = await openDB<MindEaseDB>('mindease-db', 2, {
+  dbInstance = await openDB<MindEaseDB>('mindease-db', 3, {
     upgrade(db, oldVersion) {
       if (!db.objectStoreNames.contains('users')) {
         const userStore = db.createObjectStore('users', { keyPath: 'id' });
@@ -50,6 +54,10 @@ export async function getDB(): Promise<IDBPDatabase<MindEaseDB>> {
 
       if (oldVersion < 2 && !db.objectStoreNames.contains('tasks')) {
         db.createObjectStore('tasks', { keyPath: 'id' });
+      }
+
+      if (oldVersion < 3 && !db.objectStoreNames.contains('preferences')) {
+        db.createObjectStore('preferences', { keyPath: 'userId' });
       }
     },
   });

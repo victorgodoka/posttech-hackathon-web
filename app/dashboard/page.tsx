@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ProtectedRoute } from '@/app/_components/ProtectedRoute';
 import { useAuth } from '@/app/_components/AuthProvider';
+import { useCognitive } from '@/app/_components/CognitiveProvider';
 import { useRouter } from 'next/navigation';
 import { useCases } from '@/app/_infrastructure/di/container';
 import { Task, TaskState } from '@/app/_domain/entities/Task';
@@ -14,6 +15,7 @@ import { DroppableColumn } from '@/app/_components/DroppableColumn';
 
 export default function DashboardPage() {
   const { user, isGuest, logout } = useAuth();
+  const { preferences } = useCognitive();
   const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showAddTask, setShowAddTask] = useState(false);
@@ -214,6 +216,16 @@ export default function DashboardPage() {
                 <span className="text-sm text-gray-400 font-light">Modo visitante</span>
               )}
               <button
+                onClick={() => router.push('/settings')}
+                className="px-4 py-2 text-sm text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 transition-colors font-light"
+                title="Configurações"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+              <button
                 onClick={handleLogout}
                 className="px-4 py-2 text-sm text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 border border-slate-600 dark:border-slate-600 rounded-lg hover:bg-slate-700/50 dark:hover:bg-slate-700/50 transition-colors font-light"
               >
@@ -245,10 +257,12 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Aviso suave de sobrecarga cognitiva */}
-                {activeTasks.length >= 2 && (
+                {preferences && activeTasks.length > preferences.maxTasksInFocus && preferences.overloadBehavior !== 'no-warning' && (
                   <div className="mb-4 p-3 bg-amber-900/20 dark:bg-amber-900/20 border border-amber-700/50 dark:border-amber-700/50 rounded-lg">
                     <p className="text-sm text-amber-300 dark:text-amber-300 font-normal">
-                      💡 Talvez seja mais confortável manter apenas uma tarefa em foco.
+                      {preferences.overloadBehavior === 'suggest-move' 
+                        ? '💡 Talvez seja mais confortável mover algumas para "Próximas"'
+                        : '💡 Você tem mais tarefas em foco do que o usual'}
                     </p>
                   </div>
                 )}

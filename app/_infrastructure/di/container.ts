@@ -1,6 +1,7 @@
 import { UserRepositoryIDB } from '../persistence/idb/UserRepositoryIDB';
 import { AuthRepositoryIDB } from '../persistence/idb/AuthRepositoryIDB';
 import { TaskRepositoryIDB } from '../persistence/idb/TaskRepositoryIDB';
+import { PreferencesRepositoryIDB } from '../persistence/idb/PreferencesRepositoryIDB';
 import { RegisterUser } from '@/app/_application/use-cases/RegisterUser';
 import { LoginUser } from '@/app/_application/use-cases/LoginUser';
 import { LogoutUser } from '@/app/_application/use-cases/LogoutUser';
@@ -18,10 +19,13 @@ import { PauseTaskTimer } from '@/app/_application/use-cases/PauseTaskTimer';
 import { ResetTaskTimer } from '@/app/_application/use-cases/ResetTaskTimer';
 import { UpdateTaskTimer } from '@/app/_application/use-cases/UpdateTaskTimer';
 import { CompleteTimerCycle } from '@/app/_application/use-cases/CompleteTimerCycle';
+import { GetUserPreferences } from '@/app/_application/use-cases/GetUserPreferences';
+import { UpdateUserPreferences } from '@/app/_application/use-cases/UpdateUserPreferences';
 
 const userRepository = new UserRepositoryIDB();
 const authRepository = new AuthRepositoryIDB();
 const taskRepository = new TaskRepositoryIDB();
+const preferencesRepository = new PreferencesRepositoryIDB();
 
 export const useCases = {
   registerUser: new RegisterUser(userRepository),
@@ -41,4 +45,6 @@ export const useCases = {
   resetTaskTimer: new ResetTaskTimer(taskRepository),
   updateTaskTimer: new UpdateTaskTimer(taskRepository),
   completeTimerCycle: new CompleteTimerCycle(taskRepository),
+  getUserPreferences: new GetUserPreferences(preferencesRepository),
+  updateUserPreferences: new UpdateUserPreferences(preferencesRepository),
 };
