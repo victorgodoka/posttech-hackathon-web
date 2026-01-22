@@ -14,7 +14,7 @@ export default function SettingsPage() {
 
   async function handleLogout() {
     await logout();
-    router.push('/login');
+    router.push('/welcome');
   }
 
   if (loading) {

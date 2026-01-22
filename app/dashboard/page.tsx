@@ -39,7 +39,7 @@ export default function DashboardPage() {
 
   async function handleLogout() {
     await logout();
-    router.push('/login');
+    router.push('/welcome');
   }
 
   async function handleAddTask() {
@@ -430,10 +430,10 @@ export default function DashboardPage() {
               <p className="text-base text-indigo-300 dark:text-indigo-300 font-normal text-center">
                 Se quiser, você pode{' '}
                 <button
-                  onClick={() => router.push('/login')}
+                  onClick={() => router.push('/welcome')}
                   className="underline hover:text-indigo-800"
                 >
-                  salvar isso em outros dispositivos
+                  fazer login
                 </button>
               </p>
             </div>
