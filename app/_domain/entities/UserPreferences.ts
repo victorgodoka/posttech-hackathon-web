@@ -5,6 +5,7 @@ export interface CustomColumn {
   name: string;
   order: number;
 }
+
 export type VisualComplexity = 'minimal' | 'balanced' | 'informative';
 export type InformationDensity = 'essential' | 'complete';
 export type TextSize = 'small' | 'medium' | 'large';
@@ -20,6 +21,18 @@ export interface UserPreferencesProps {
   textSize: TextSize;
   notificationTiming: NotificationTiming;
   updatedAt: Date;
+}
+
+export interface UserPreferencesJSON {
+  userId: string;
+  layoutMode?: string;
+  customColumns?: CustomColumn[];
+  overloadBehavior?: string;
+  visualComplexity?: string;
+  informationDensity?: string;
+  textSize?: string;
+  notificationTiming?: string;
+  updatedAt: string;
 }
 
 export class UserPreferences {
@@ -87,13 +100,36 @@ export class UserPreferences {
     this.props.updatedAt = new Date();
   }
 
-  addCustomColumn(name: string): void {
+  addCustomColumn(name: string, afterColumnId?: string): void {
     const newColumn: CustomColumn = {
       id: crypto.randomUUID(),
       name,
-      order: this.props.customColumns.length,
+      order: 0,
     };
-    this.props.customColumns.push(newColumn);
+
+    if (!afterColumnId || this.props.customColumns.length === 0) {
+      newColumn.order = this.props.customColumns.length;
+      this.props.customColumns.push(newColumn);
+    } else {
+      const afterColumn = this.props.customColumns.find(c => c.id === afterColumnId);
+      if (afterColumn) {
+        const insertPosition = afterColumn.order + 1;
+        newColumn.order = insertPosition;
+        
+        this.props.customColumns.forEach(col => {
+          if (col.order >= insertPosition) {
+            col.order++;
+          }
+        });
+        
+        this.props.customColumns.push(newColumn);
+        this.props.customColumns.sort((a, b) => a.order - b.order);
+      } else {
+        newColumn.order = this.props.customColumns.length;
+        this.props.customColumns.push(newColumn);
+      }
+    }
+    
     this.props.updatedAt = new Date();
   }
 
@@ -154,16 +190,16 @@ export class UserPreferences {
     };
   }
 
-  static fromJSON(data: any): UserPreferences {
+  static fromJSON(data: UserPreferencesJSON): UserPreferences {
     return UserPreferences.fromPersistence({
       userId: data.userId,
-      layoutMode: data.layoutMode || 'list',
+      layoutMode: (data.layoutMode as LayoutMode) || 'list',
       customColumns: data.customColumns || [],
-      overloadBehavior: data.overloadBehavior || 'suggest-move',
-      visualComplexity: data.visualComplexity || 'balanced',
-      informationDensity: data.informationDensity || 'complete',
-      textSize: data.textSize || 'medium',
-      notificationTiming: data.notificationTiming || 'only-when-asked',
+      overloadBehavior: (data.overloadBehavior as 'warn-only' | 'suggest-move' | 'no-warning') || 'suggest-move',
+      visualComplexity: (data.visualComplexity as VisualComplexity) || 'balanced',
+      informationDensity: (data.informationDensity as InformationDensity) || 'complete',
+      textSize: (data.textSize as TextSize) || 'medium',
+      notificationTiming: (data.notificationTiming as NotificationTiming) || 'only-when-asked',
       updatedAt: new Date(data.updatedAt),
     });
   }

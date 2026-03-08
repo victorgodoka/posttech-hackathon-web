@@ -23,9 +23,9 @@ export function CognitiveStyles() {
     root.classList.remove('visual-minimal', 'visual-balanced', 'visual-informative');
     root.classList.add(`visual-${preferences.visualComplexity}`);
 
-    // Focus Rhythm
-    root.classList.remove('rhythm-one-at-time', 'rhythm-few-parallel', 'rhythm-no-limit');
-    root.classList.add(`rhythm-${preferences.focusRhythm}`);
+    // Layout Mode
+    root.classList.remove('layout-list', 'layout-complete', 'layout-custom');
+    root.classList.add(`layout-${preferences.layoutMode}`);
 
     // Animations (sempre ativadas no MindEase - suaves por padrão)
     root.style.setProperty('--animation-duration', '300ms');

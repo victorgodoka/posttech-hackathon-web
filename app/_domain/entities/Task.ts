@@ -24,6 +24,15 @@ export interface TaskProps {
   timer?: TaskTimer;
 }
 
+export interface TaskJSON {
+  id: string;
+  text: string;
+  state: string;
+  createdAt: string;
+  steps?: TaskStep[];
+  timer?: TaskTimer;
+}
+
 export class Task {
   private constructor(private props: TaskProps) {}
 
@@ -181,11 +190,11 @@ export class Task {
     };
   }
 
-  static fromJSON(data: any): Task {
+  static fromJSON(data: TaskJSON): Task {
     return Task.fromPersistence({
       id: data.id,
       text: data.text,
-      state: data.state,
+      state: data.state as TaskState,
       createdAt: new Date(data.createdAt),
       steps: data.steps || [],
       timer: data.timer || {

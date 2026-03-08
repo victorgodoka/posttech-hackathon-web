@@ -5,6 +5,7 @@ import { AuthProvider } from "./_components/AuthProvider";
 import { ThemeProvider } from "./_components/ThemeProvider";
 import { CognitiveProvider } from "./_components/CognitiveProvider";
 import { CognitiveStyles } from "./_components/CognitiveStyles";
+import { ToastProvider } from "./_components/ToastProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,8 +37,10 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <CognitiveProvider>
-              <CognitiveStyles />
-              {children}
+              <ToastProvider>
+                <CognitiveStyles />
+                {children}
+              </ToastProvider>
             </CognitiveProvider>
           </AuthProvider>
         </ThemeProvider>

@@ -33,7 +33,7 @@ function getVisibleColumns(mode: LayoutMode): ColumnId[] {
     case 'complete':
       return ['active', 'paused', 'done'];
     case 'custom':
-      return ['active']; // Custom columns handled separately
+      return []; // No default columns in custom mode
     default:
       return ['active', 'paused', 'done'];
   }

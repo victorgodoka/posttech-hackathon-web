@@ -9,7 +9,7 @@ interface CognitiveContextValue {
   preferences: UserPreferences | null;
   loading: boolean;
   updateLayoutMode: (mode: LayoutMode) => Promise<void>;
-  addCustomColumn: (name: string) => Promise<void>;
+  addCustomColumn: (name: string, afterColumnId?: string) => Promise<void>;
   updateCustomColumn: (columnId: string, name: string) => Promise<void>;
   removeCustomColumn: (columnId: string) => Promise<void>;
   updateOverloadBehavior: (behavior: 'warn-only' | 'suggest-move' | 'no-warning') => Promise<void>;
@@ -49,11 +49,13 @@ export function CognitiveProvider({ children }: { children: ReactNode }) {
     setPreferences(updated);
   }
 
-  async function addCustomColumn(name: string) {
+  async function addCustomColumn(name: string, afterColumnId?: string) {
     if (!preferences) return;
     const userId = user?.id || 'guest-user';
-    preferences.addCustomColumn(name);
-    const updated = await useCases.updateUserPreferences.execute(userId, { customColumns: preferences.customColumns });
+    preferences.addCustomColumn(name, afterColumnId);
+    const updated = await useCases.updateUserPreferences.execute(userId, {
+      customColumns: preferences.customColumns,
+    });
     setPreferences(updated);
   }
 

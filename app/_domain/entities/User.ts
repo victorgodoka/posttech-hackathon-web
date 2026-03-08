@@ -8,6 +8,14 @@ export interface UserProps {
   createdAt: Date;
 }
 
+export interface UserJSON {
+  id: string;
+  email: string;
+  name: string;
+  hashedPassword: string;
+  createdAt: string;
+}
+
 export class User {
   private constructor(private props: UserProps) {}
 
@@ -59,7 +67,7 @@ export class User {
     };
   }
 
-  static fromJSON(data: any): User {
+  static fromJSON(data: UserJSON): User {
     return User.fromPersistence({
       id: data.id,
       email: Email.create(data.email),
