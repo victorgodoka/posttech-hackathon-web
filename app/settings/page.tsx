@@ -5,10 +5,10 @@ import { useCognitive } from '@/app/_components/CognitiveProvider';
 import { useAuth } from '@/app/_components/AuthProvider';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { FocusRhythm, VisualComplexity, TextSize, NotificationTiming } from '@/app/_domain/entities/UserPreferences';
+import { LayoutMode, VisualComplexity, InformationDensity, TextSize, NotificationTiming } from '@/app/_domain/entities/UserPreferences';
 
 export default function SettingsPage() {
-  const { preferences, loading, updateFocusRhythm, updateMaxTasksInFocus, updateOverloadBehavior, updateVisualComplexity, updateTextSize, updateNotificationTiming } = useCognitive();
+  const { preferences, loading, updateLayoutMode, updateOverloadBehavior, updateVisualComplexity, updateInformationDensity, updateTextSize, updateNotificationTiming } = useCognitive();
   const { logout } = useAuth();
   const router = useRouter();
 
@@ -74,129 +74,66 @@ export default function SettingsPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Bloco 1: Ritmo Cognitivo */}
+            {/* Bloco 1: Layout Confortável */}
             <section className="bg-slate-800/40 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6">
-              <h3 className="text-base font-medium text-slate-200 mb-3">Como você prefere focar agora?</h3>
+              <h3 className="text-base font-medium text-slate-200 mb-3">Layout confortável</h3>
               
               <div className="space-y-3">
                 <label className={`flex items-start p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                  preferences.focusRhythm === 'one-at-time'
+                  preferences.layoutMode === 'list'
                     ? 'border-amber-600/60 bg-amber-900/10'
                     : 'border-slate-600/50 hover:border-slate-500'
                 }`}>
                   <input
                     type="radio"
-                    name="focusRhythm"
-                    checked={preferences.focusRhythm === 'one-at-time'}
-                    onChange={() => updateFocusRhythm('one-at-time')}
+                    name="layoutMode"
+                    checked={preferences.layoutMode === 'list'}
+                    onChange={() => updateLayoutMode('list')}
                     className="mt-0.5 w-4 h-4 text-amber-500 border-slate-500 focus:ring-amber-500 focus:ring-offset-0"
                   />
                   <div className="ml-3">
-                    <p className="text-sm text-slate-200 font-normal">Uma coisa por vez <span className="text-amber-400 text-xs">(recomendado)</span></p>
-                    <p className="text-xs text-slate-400 font-normal mt-0.5">Menos sobrecarga, mais clareza</p>
+                    <p className="text-sm text-slate-200 font-normal">Lista</p>
+                    <p className="text-xs text-slate-400 font-normal mt-0.5">Apenas 1 coluna de afazeres + botão de histórico</p>
                   </div>
                 </label>
 
                 <label className={`flex items-start p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                  preferences.focusRhythm === 'few-parallel'
+                  preferences.layoutMode === 'complete'
                     ? 'border-amber-600/60 bg-amber-900/10'
                     : 'border-slate-600/50 hover:border-slate-500'
                 }`}>
                   <input
                     type="radio"
-                    name="focusRhythm"
-                    checked={preferences.focusRhythm === 'few-parallel'}
-                    onChange={() => updateFocusRhythm('few-parallel')}
+                    name="layoutMode"
+                    checked={preferences.layoutMode === 'complete'}
+                    onChange={() => updateLayoutMode('complete')}
                     className="mt-0.5 w-4 h-4 text-amber-500 border-slate-500 focus:ring-amber-500 focus:ring-offset-0"
                   />
                   <div className="ml-3">
-                    <p className="text-sm text-slate-200 font-normal">Poucas coisas em paralelo</p>
-                    <p className="text-xs text-slate-400 font-normal mt-0.5">Até 3 tarefas visíveis</p>
+                    <p className="text-sm text-slate-200 font-normal">Completo</p>
+                    <p className="text-xs text-slate-400 font-normal mt-0.5">A fazer • Fazendo • Completo</p>
                   </div>
                 </label>
 
                 <label className={`flex items-start p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                  preferences.focusRhythm === 'no-limit'
+                  preferences.layoutMode === 'custom'
                     ? 'border-amber-600/60 bg-amber-900/10'
                     : 'border-slate-600/50 hover:border-slate-500'
                 }`}>
                   <input
                     type="radio"
-                    name="focusRhythm"
-                    checked={preferences.focusRhythm === 'no-limit'}
-                    onChange={() => updateFocusRhythm('no-limit')}
+                    name="layoutMode"
+                    checked={preferences.layoutMode === 'custom'}
+                    onChange={() => updateLayoutMode('custom')}
                     className="mt-0.5 w-4 h-4 text-amber-500 border-slate-500 focus:ring-amber-500 focus:ring-offset-0"
                   />
                   <div className="ml-3">
-                    <p className="text-sm text-slate-200 font-normal">Sem limite visível</p>
-                    <p className="text-xs text-slate-400 font-normal mt-0.5">Você decide quantas tarefas quer ver</p>
+                    <p className="text-sm text-slate-200 font-normal">Customizado</p>
+                    <p className="text-xs text-slate-400 font-normal mt-0.5">Crie suas próprias colunas personalizadas</p>
                   </div>
                 </label>
               </div>
             </section>
-
-            {/* Bloco 2: Limites de Sobrecarga */}
-            {preferences.focusRhythm !== 'no-limit' && (
-              <section className="bg-slate-800/40 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6">
-                <h3 className="text-base font-medium text-slate-200 mb-3">Comportamento ao ultrapassar limite</h3>
-                
-                <div className="space-y-3">
-                  <label className={`flex items-start p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                    preferences.overloadBehavior === 'suggest-move'
-                      ? 'border-indigo-600/60 bg-indigo-900/10'
-                      : 'border-slate-600/50 hover:border-slate-500'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="overloadBehavior"
-                      checked={preferences.overloadBehavior === 'suggest-move'}
-                      onChange={() => updateOverloadBehavior('suggest-move')}
-                      className="mt-0.5 w-4 h-4 text-indigo-500 border-slate-500 focus:ring-indigo-500 focus:ring-offset-0"
-                    />
-                    <div className="ml-3">
-                      <p className="text-sm text-slate-200 font-normal">Sugerir mover para Próximas</p>
-                      <p className="text-xs text-slate-400 font-normal mt-0.5">Aviso gentil com sugestão</p>
-                    </div>
-                  </label>
-
-                  <label className={`flex items-start p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                    preferences.overloadBehavior === 'warn-only'
-                      ? 'border-indigo-600/60 bg-indigo-900/10'
-                      : 'border-slate-600/50 hover:border-slate-500'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="overloadBehavior"
-                      checked={preferences.overloadBehavior === 'warn-only'}
-                      onChange={() => updateOverloadBehavior('warn-only')}
-                      className="mt-0.5 w-4 h-4 text-indigo-500 border-slate-500 focus:ring-indigo-500 focus:ring-offset-0"
-                    />
-                    <div className="ml-3">
-                      <p className="text-sm text-slate-200 font-normal">Apenas avisar</p>
-                      <p className="text-xs text-slate-400 font-normal mt-0.5">Só um lembrete, você decide</p>
-                    </div>
-                  </label>
-
-                  <label className={`flex items-start p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                    preferences.overloadBehavior === 'no-warning'
-                      ? 'border-indigo-600/60 bg-indigo-900/10'
-                      : 'border-slate-600/50 hover:border-slate-500'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="overloadBehavior"
-                      checked={preferences.overloadBehavior === 'no-warning'}
-                      onChange={() => updateOverloadBehavior('no-warning')}
-                      className="mt-0.5 w-4 h-4 text-indigo-500 border-slate-500 focus:ring-indigo-500 focus:ring-offset-0"
-                    />
-                    <div className="ml-3">
-                      <p className="text-sm text-slate-200 font-normal">Não mostrar aviso</p>
-                      <p className="text-xs text-slate-400 font-normal mt-0.5">Sem interrupções</p>
-                    </div>
-                  </label>
-                </div>
-              </section>
-            )}
 
             {/* Bloco 3: Estímulos Visuais */}
             <section className="bg-slate-800/40 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6">
@@ -260,7 +197,51 @@ export default function SettingsPage() {
               </div>
             </section>
 
-            {/* Bloco 4: Leitura & Acessibilidade */}
+            {/* Bloco 4: Densidade Informacional */}
+            <section className="bg-slate-800/40 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6">
+              <h3 className="text-base font-medium text-slate-200 mb-2">Densidade de informação</h3>
+              <p className="text-xs text-slate-400 font-normal mb-4">Controla quanto detalhe cada tarefa mostra</p>
+              
+              <div className="space-y-3">
+                <label className={`flex items-start p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                  preferences.informationDensity === 'essential'
+                    ? 'border-cyan-600/60 bg-cyan-900/10'
+                    : 'border-slate-600/50 hover:border-slate-500'
+                }`}>
+                  <input
+                    type="radio"
+                    name="informationDensity"
+                    checked={preferences.informationDensity === 'essential'}
+                    onChange={() => updateInformationDensity('essential')}
+                    className="mt-0.5 w-4 h-4 text-cyan-500 border-slate-500 focus:ring-cyan-500 focus:ring-offset-0"
+                  />
+                  <div className="ml-3">
+                    <p className="text-sm text-slate-200 font-normal">Essencial</p>
+                    <p className="text-xs text-slate-400 font-normal mt-0.5">Apenas texto e ação principal</p>
+                  </div>
+                </label>
+
+                <label className={`flex items-start p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                  preferences.informationDensity === 'complete'
+                    ? 'border-cyan-600/60 bg-cyan-900/10'
+                    : 'border-slate-600/50 hover:border-slate-500'
+                }`}>
+                  <input
+                    type="radio"
+                    name="informationDensity"
+                    checked={preferences.informationDensity === 'complete'}
+                    onChange={() => updateInformationDensity('complete')}
+                    className="mt-0.5 w-4 h-4 text-cyan-500 border-slate-500 focus:ring-cyan-500 focus:ring-offset-0"
+                  />
+                  <div className="ml-3">
+                    <p className="text-sm text-slate-200 font-normal">Completo</p>
+                    <p className="text-xs text-slate-400 font-normal mt-0.5">Timer, passos e todas as informações</p>
+                  </div>
+                </label>
+              </div>
+            </section>
+
+            {/* Bloco 5: Leitura & Acessibilidade */}
             <section className="bg-slate-800/40 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6">
               <h3 className="text-base font-medium text-slate-200 mb-4">Tamanho do texto</h3>
               
@@ -300,7 +281,7 @@ export default function SettingsPage() {
               </div>
             </section>
 
-            {/* Bloco 5: Notificações Conscientes */}
+            {/* Bloco 6: Notificações Conscientes */}
             <section className="bg-slate-800/40 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6">
               <h3 className="text-base font-medium text-slate-200 mb-2">Quando você gostaria de ser lembrado?</h3>
               <p className="text-xs text-slate-400 font-normal mb-4">O MindEase evita interrupções desnecessárias</p>

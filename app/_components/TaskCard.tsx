@@ -5,6 +5,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Task, TaskState, TaskStep } from '@/app/_domain/entities/Task';
 import { PomodoroTimer } from './PomodoroTimer';
+import { useCognitiveLayout } from './hooks/useCognitiveLayout';
 
 interface TaskCardProps {
   task: Task;
@@ -33,6 +34,7 @@ export function TaskCard({
   onCompleteTimer,
   isPrimaryFocus = true,
 }: TaskCardProps) {
+  const layout = useCognitiveLayout();
   const [showSteps, setShowSteps] = useState(false);
   const [showAddStep, setShowAddStep] = useState(false);
   const [stepInput, setStepInput] = useState('');
@@ -77,8 +79,8 @@ export function TaskCard({
         {task.text}
       </p>
 
-      {/* Timer Pomodoro - apenas para tarefa principal em foco */}
-      {task.state === 'active' && isPrimaryFocus && onStartTimer && onPauseTimer && onResetTimer && onCompleteTimer && (
+      {/* Timer Pomodoro - apenas para tarefa principal em foco e se densidade permitir */}
+      {layout.showTimer && task.state === 'active' && isPrimaryFocus && onStartTimer && onPauseTimer && onResetTimer && onCompleteTimer && (
         <PomodoroTimer
           taskId={task.id}
           timer={task.timer}
@@ -98,8 +100,8 @@ export function TaskCard({
         </div>
       )}
 
-      {/* Indicador de progresso dos passos */}
-      {hasSteps && (
+      {/* Indicador de progresso dos passos - se densidade permitir */}
+      {layout.showSteps && hasSteps && (
         <div className="mb-3">
           <button
             onClick={() => setShowSteps(!showSteps)}
@@ -113,8 +115,8 @@ export function TaskCard({
         </div>
       )}
 
-      {/* Lista de passos (expansível) */}
-      {showSteps && hasSteps && (
+      {/* Lista de passos (expansível) - se densidade permitir */}
+      {layout.showSteps && showSteps && hasSteps && (
         <div className="mb-3 ml-2 space-y-2">
           {task.steps.map((step) => (
             <div key={step.id} className="flex items-start gap-2 group/step">
@@ -149,8 +151,8 @@ export function TaskCard({
         </div>
       )}
 
-      {/* Adicionar novo passo */}
-      {showSteps && showAddStep && (
+      {/* Adicionar novo passo - se densidade permitir */}
+      {layout.showSteps && showSteps && showAddStep && (
         <div className="mb-3 ml-2">
           <input
             type="text"
@@ -181,8 +183,8 @@ export function TaskCard({
         </div>
       )}
 
-      {/* Botão para adicionar passo */}
-      {showSteps && !showAddStep && (
+      {/* Botão para adicionar passo - se densidade permitir */}
+      {layout.showSteps && showSteps && !showAddStep && (
         <button
           onClick={() => setShowAddStep(true)}
           className="ml-2 mb-3 text-sm text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 font-normal"
@@ -191,8 +193,8 @@ export function TaskCard({
         </button>
       )}
 
-      {/* Botão para quebrar em passos (se não tem passos ainda) */}
-      {!hasSteps && task.state === 'active' && (
+      {/* Botão para quebrar em passos (se não tem passos ainda) - se densidade permitir */}
+      {layout.showSteps && !hasSteps && task.state === 'active' && (
         <button
           onClick={() => {
             setShowSteps(true);
@@ -207,45 +209,53 @@ export function TaskCard({
         </button>
       )}
 
-      {/* Ações da tarefa */}
+      {/* Ações da tarefa - adaptadas pela complexidade visual */}
       <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
         {task.state === 'active' && (
           <>
-            <button
-              onClick={() => onUpdateState(task.id, 'paused')}
-              className="text-sm text-amber-400 hover:text-amber-300 dark:text-amber-400 dark:hover:text-amber-300 font-normal"
-              title="Mover para Próximas"
-            >
-              Mover para Próximas
-            </button>
-            <button
-              onClick={() => onUpdateState(task.id, 'done')}
-              className="text-sm text-green-400 hover:text-green-300 dark:text-green-400 dark:hover:text-green-300 font-normal"
-              title="Concluir"
-            >
-              Concluir
-            </button>
+            {layout.maxActions >= 1 && (
+              <button
+                onClick={() => onUpdateState(task.id, 'done')}
+                className="text-sm text-green-400 hover:text-green-300 dark:text-green-400 dark:hover:text-green-300 font-normal"
+                title="Concluir"
+              >
+                Concluir
+              </button>
+            )}
+            {layout.showSecondaryActions && layout.maxActions >= 2 && (
+              <button
+                onClick={() => onUpdateState(task.id, 'paused')}
+                className="text-sm text-amber-400 hover:text-amber-300 dark:text-amber-400 dark:hover:text-amber-300 font-normal"
+                title="Mover para Próximas"
+              >
+                Próximas
+              </button>
+            )}
           </>
         )}
         {task.state === 'paused' && (
           <>
-            <button
-              onClick={() => onUpdateState(task.id, 'active')}
-              className="text-sm text-indigo-400 hover:text-indigo-300 dark:text-indigo-400 dark:hover:text-indigo-300 font-normal"
-              title="Trazer para Foco"
-            >
-              Trazer para Foco
-            </button>
-            <button
-              onClick={() => onUpdateState(task.id, 'done')}
-              className="text-sm text-green-400 hover:text-green-300 dark:text-green-400 dark:hover:text-green-300 font-normal"
-              title="Concluir"
-            >
-              Concluir
-            </button>
+            {layout.maxActions >= 1 && (
+              <button
+                onClick={() => onUpdateState(task.id, 'active')}
+                className="text-sm text-indigo-400 hover:text-indigo-300 dark:text-indigo-400 dark:hover:text-indigo-300 font-normal"
+                title="Trazer para Foco"
+              >
+                Focar
+              </button>
+            )}
+            {layout.showSecondaryActions && layout.maxActions >= 2 && (
+              <button
+                onClick={() => onUpdateState(task.id, 'done')}
+                className="text-sm text-green-400 hover:text-green-300 dark:text-green-400 dark:hover:text-green-300 font-normal"
+                title="Concluir"
+              >
+                Concluir
+              </button>
+            )}
           </>
         )}
-        {task.state === 'done' && (
+        {task.state === 'done' && layout.maxActions >= 1 && (
           <button
             onClick={() => onUpdateState(task.id, 'active')}
             className="text-sm text-indigo-400 hover:text-indigo-300 dark:text-indigo-400 dark:hover:text-indigo-300 font-normal"
@@ -254,13 +264,15 @@ export function TaskCard({
             Reabrir
           </button>
         )}
-        <button
-          onClick={() => onDelete(task.id)}
-          className="text-sm text-slate-500 hover:text-slate-300 dark:text-slate-500 dark:hover:text-slate-300 font-normal ml-auto"
-          title="Remover"
-        >
-          Remover
-        </button>
+        {layout.showSecondaryActions && (
+          <button
+            onClick={() => onDelete(task.id)}
+            className="text-sm text-slate-500 hover:text-slate-300 dark:text-slate-500 dark:hover:text-slate-300 font-normal ml-auto"
+            title="Remover"
+          >
+            Remover
+          </button>
+        )}
       </div>
     </div>
   );

@@ -1,11 +1,12 @@
 import { IPreferencesRepository } from '@/app/_domain/repositories/IPreferencesRepository';
-import { UserPreferences, FocusRhythm, VisualComplexity, TextSize, NotificationTiming } from '@/app/_domain/entities/UserPreferences';
+import { UserPreferences, LayoutMode, CustomColumn, VisualComplexity, InformationDensity, TextSize, NotificationTiming } from '@/app/_domain/entities/UserPreferences';
 
 export interface UpdatePreferencesDTO {
-  focusRhythm?: FocusRhythm;
-  maxTasksInFocus?: number;
+  layoutMode?: LayoutMode;
+  customColumns?: CustomColumn[];
   overloadBehavior?: 'warn-only' | 'suggest-move' | 'no-warning';
   visualComplexity?: VisualComplexity;
+  informationDensity?: InformationDensity;
   textSize?: TextSize;
   notificationTiming?: NotificationTiming;
 }
@@ -20,12 +21,12 @@ export class UpdateUserPreferences {
       preferences = UserPreferences.createDefault(userId);
     }
 
-    if (updates.focusRhythm !== undefined) {
-      preferences.updateFocusRhythm(updates.focusRhythm);
+    if (updates.layoutMode !== undefined) {
+      preferences.updateLayoutMode(updates.layoutMode);
     }
 
-    if (updates.maxTasksInFocus !== undefined) {
-      preferences.updateMaxTasksInFocus(updates.maxTasksInFocus);
+    if (updates.customColumns !== undefined) {
+      preferences.reorderCustomColumns(updates.customColumns);
     }
 
     if (updates.overloadBehavior !== undefined) {
@@ -34,6 +35,10 @@ export class UpdateUserPreferences {
 
     if (updates.visualComplexity !== undefined) {
       preferences.updateVisualComplexity(updates.visualComplexity);
+    }
+
+    if (updates.informationDensity !== undefined) {
+      preferences.updateInformationDensity(updates.informationDensity);
     }
 
     if (updates.textSize !== undefined) {

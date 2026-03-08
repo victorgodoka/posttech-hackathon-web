@@ -1,17 +1,20 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { UserPreferences, FocusRhythm, VisualComplexity, TextSize, NotificationTiming } from '@/app/_domain/entities/UserPreferences';
+import { UserPreferences, LayoutMode, CustomColumn, VisualComplexity, InformationDensity, TextSize, NotificationTiming } from '@/app/_domain/entities/UserPreferences';
 import { useCases } from '@/app/_infrastructure/di/container';
 import { useAuth } from './AuthProvider';
 
 interface CognitiveContextValue {
   preferences: UserPreferences | null;
   loading: boolean;
-  updateFocusRhythm: (rhythm: FocusRhythm) => Promise<void>;
-  updateMaxTasksInFocus: (max: number) => Promise<void>;
+  updateLayoutMode: (mode: LayoutMode) => Promise<void>;
+  addCustomColumn: (name: string) => Promise<void>;
+  updateCustomColumn: (columnId: string, name: string) => Promise<void>;
+  removeCustomColumn: (columnId: string) => Promise<void>;
   updateOverloadBehavior: (behavior: 'warn-only' | 'suggest-move' | 'no-warning') => Promise<void>;
   updateVisualComplexity: (complexity: VisualComplexity) => Promise<void>;
+  updateInformationDensity: (density: InformationDensity) => Promise<void>;
   updateTextSize: (size: TextSize) => Promise<void>;
   updateNotificationTiming: (timing: NotificationTiming) => Promise<void>;
   refresh: () => Promise<void>;
@@ -25,12 +28,6 @@ export function CognitiveProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   async function loadPreferences() {
-    if (!isAuthenticated) {
-      setPreferences(null);
-      setLoading(false);
-      return;
-    }
-
     try {
       const userId = user?.id || 'guest-user';
       const prefs = await useCases.getUserPreferences.execute(userId);
@@ -46,49 +43,61 @@ export function CognitiveProvider({ children }: { children: ReactNode }) {
     loadPreferences();
   }, [isAuthenticated, user?.id]);
 
-  async function updateFocusRhythm(rhythm: FocusRhythm) {
-    if (!isAuthenticated) return;
-    
+  async function updateLayoutMode(mode: LayoutMode) {
     const userId = user?.id || 'guest-user';
-    const updated = await useCases.updateUserPreferences.execute(userId, { focusRhythm: rhythm });
+    const updated = await useCases.updateUserPreferences.execute(userId, { layoutMode: mode });
     setPreferences(updated);
   }
 
-  async function updateMaxTasksInFocus(max: number) {
-    if (!isAuthenticated) return;
-    
+  async function addCustomColumn(name: string) {
+    if (!preferences) return;
     const userId = user?.id || 'guest-user';
-    const updated = await useCases.updateUserPreferences.execute(userId, { maxTasksInFocus: max });
+    preferences.addCustomColumn(name);
+    const updated = await useCases.updateUserPreferences.execute(userId, { customColumns: preferences.customColumns });
+    setPreferences(updated);
+  }
+
+  async function updateCustomColumn(columnId: string, name: string) {
+    if (!preferences) return;
+    const userId = user?.id || 'guest-user';
+    preferences.updateCustomColumn(columnId, name);
+    const updated = await useCases.updateUserPreferences.execute(userId, { customColumns: preferences.customColumns });
+    setPreferences(updated);
+  }
+
+  async function removeCustomColumn(columnId: string) {
+    if (!preferences) return;
+    const userId = user?.id || 'guest-user';
+    preferences.removeCustomColumn(columnId);
+    const updated = await useCases.updateUserPreferences.execute(userId, { customColumns: preferences.customColumns });
     setPreferences(updated);
   }
 
   async function updateOverloadBehavior(behavior: 'warn-only' | 'suggest-move' | 'no-warning') {
-    if (!isAuthenticated) return;
-    
     const userId = user?.id || 'guest-user';
     const updated = await useCases.updateUserPreferences.execute(userId, { overloadBehavior: behavior });
     setPreferences(updated);
   }
 
   async function updateVisualComplexity(complexity: VisualComplexity) {
-    if (!isAuthenticated) return;
-    
     const userId = user?.id || 'guest-user';
     const updated = await useCases.updateUserPreferences.execute(userId, { visualComplexity: complexity });
     setPreferences(updated);
   }
 
+  async function updateInformationDensity(density: InformationDensity) {
+    const userId = user?.id || 'guest-user';
+    const updated = await useCases.updateUserPreferences.execute(userId, { informationDensity: density });
+    setPreferences(updated);
+  }
+
   async function updateTextSize(size: TextSize) {
-    if (!isAuthenticated) return;
-    
     const userId = user?.id || 'guest-user';
     const updated = await useCases.updateUserPreferences.execute(userId, { textSize: size });
     setPreferences(updated);
   }
 
   async function updateNotificationTiming(timing: NotificationTiming) {
-    if (!isAuthenticated) return;
-    
     const userId = user?.id || 'guest-user';
     const updated = await useCases.updateUserPreferences.execute(userId, { notificationTiming: timing });
     setPreferences(updated);
@@ -99,10 +108,13 @@ export function CognitiveProvider({ children }: { children: ReactNode }) {
       value={{
         preferences,
         loading,
-        updateFocusRhythm,
-        updateMaxTasksInFocus,
+        updateLayoutMode,
+        addCustomColumn,
+        updateCustomColumn,
+        removeCustomColumn,
         updateOverloadBehavior,
         updateVisualComplexity,
+        updateInformationDensity,
         updateTextSize,
         updateNotificationTiming,
         refresh: loadPreferences,

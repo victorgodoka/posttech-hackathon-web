@@ -1,14 +1,22 @@
-export type FocusRhythm = 'one-at-time' | 'few-parallel' | 'no-limit';
+export type LayoutMode = 'list' | 'complete' | 'custom';
+
+export interface CustomColumn {
+  id: string;
+  name: string;
+  order: number;
+}
 export type VisualComplexity = 'minimal' | 'balanced' | 'informative';
+export type InformationDensity = 'essential' | 'complete';
 export type TextSize = 'small' | 'medium' | 'large';
 export type NotificationTiming = 'only-when-asked' | 'focus-ends' | 'long-breaks';
 
 export interface UserPreferencesProps {
   userId: string;
-  focusRhythm: FocusRhythm;
-  maxTasksInFocus: number;
+  layoutMode: LayoutMode;
+  customColumns: CustomColumn[];
   overloadBehavior: 'warn-only' | 'suggest-move' | 'no-warning';
   visualComplexity: VisualComplexity;
+  informationDensity: InformationDensity;
   textSize: TextSize;
   notificationTiming: NotificationTiming;
   updatedAt: Date;
@@ -20,10 +28,11 @@ export class UserPreferences {
   static createDefault(userId: string): UserPreferences {
     return new UserPreferences({
       userId,
-      focusRhythm: 'one-at-time',
-      maxTasksInFocus: 1,
+      layoutMode: 'list',
+      customColumns: [],
       overloadBehavior: 'suggest-move',
       visualComplexity: 'balanced',
+      informationDensity: 'complete',
       textSize: 'medium',
       notificationTiming: 'only-when-asked',
       updatedAt: new Date(),
@@ -38,12 +47,12 @@ export class UserPreferences {
     return this.props.userId;
   }
 
-  get focusRhythm(): FocusRhythm {
-    return this.props.focusRhythm;
+  get layoutMode(): LayoutMode {
+    return this.props.layoutMode;
   }
 
-  get maxTasksInFocus(): number {
-    return this.props.maxTasksInFocus;
+  get customColumns(): CustomColumn[] {
+    return this.props.customColumns;
   }
 
   get overloadBehavior(): 'warn-only' | 'suggest-move' | 'no-warning' {
@@ -52,6 +61,10 @@ export class UserPreferences {
 
   get visualComplexity(): VisualComplexity {
     return this.props.visualComplexity;
+  }
+
+  get informationDensity(): InformationDensity {
+    return this.props.informationDensity;
   }
 
   get textSize(): TextSize {
@@ -66,20 +79,39 @@ export class UserPreferences {
     return this.props.updatedAt;
   }
 
-  updateFocusRhythm(rhythm: FocusRhythm): void {
-    this.props.focusRhythm = rhythm;
-    if (rhythm === 'one-at-time') {
-      this.props.maxTasksInFocus = 1;
-    } else if (rhythm === 'few-parallel') {
-      this.props.maxTasksInFocus = 3;
-    } else {
-      this.props.maxTasksInFocus = 999;
+  updateLayoutMode(mode: LayoutMode): void {
+    this.props.layoutMode = mode;
+    if (mode !== 'custom') {
+      this.props.customColumns = [];
     }
     this.props.updatedAt = new Date();
   }
 
-  updateMaxTasksInFocus(max: number): void {
-    this.props.maxTasksInFocus = max;
+  addCustomColumn(name: string): void {
+    const newColumn: CustomColumn = {
+      id: crypto.randomUUID(),
+      name,
+      order: this.props.customColumns.length,
+    };
+    this.props.customColumns.push(newColumn);
+    this.props.updatedAt = new Date();
+  }
+
+  updateCustomColumn(columnId: string, name: string): void {
+    const column = this.props.customColumns.find(c => c.id === columnId);
+    if (column) {
+      column.name = name;
+      this.props.updatedAt = new Date();
+    }
+  }
+
+  removeCustomColumn(columnId: string): void {
+    this.props.customColumns = this.props.customColumns.filter(c => c.id !== columnId);
+    this.props.updatedAt = new Date();
+  }
+
+  reorderCustomColumns(columns: CustomColumn[]): void {
+    this.props.customColumns = columns;
     this.props.updatedAt = new Date();
   }
 
@@ -90,6 +122,11 @@ export class UserPreferences {
 
   updateVisualComplexity(complexity: VisualComplexity): void {
     this.props.visualComplexity = complexity;
+    this.props.updatedAt = new Date();
+  }
+
+  updateInformationDensity(density: InformationDensity): void {
+    this.props.informationDensity = density;
     this.props.updatedAt = new Date();
   }
 
@@ -106,10 +143,11 @@ export class UserPreferences {
   toJSON() {
     return {
       userId: this.props.userId,
-      focusRhythm: this.props.focusRhythm,
-      maxTasksInFocus: this.props.maxTasksInFocus,
+      layoutMode: this.props.layoutMode,
+      customColumns: this.props.customColumns,
       overloadBehavior: this.props.overloadBehavior,
       visualComplexity: this.props.visualComplexity,
+      informationDensity: this.props.informationDensity,
       textSize: this.props.textSize,
       notificationTiming: this.props.notificationTiming,
       updatedAt: this.props.updatedAt.toISOString(),
@@ -119,10 +157,11 @@ export class UserPreferences {
   static fromJSON(data: any): UserPreferences {
     return UserPreferences.fromPersistence({
       userId: data.userId,
-      focusRhythm: data.focusRhythm || 'one-at-time',
-      maxTasksInFocus: data.maxTasksInFocus || 1,
+      layoutMode: data.layoutMode || 'list',
+      customColumns: data.customColumns || [],
       overloadBehavior: data.overloadBehavior || 'suggest-move',
       visualComplexity: data.visualComplexity || 'balanced',
+      informationDensity: data.informationDensity || 'complete',
       textSize: data.textSize || 'medium',
       notificationTiming: data.notificationTiming || 'only-when-asked',
       updatedAt: new Date(data.updatedAt),

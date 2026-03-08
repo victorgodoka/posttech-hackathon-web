@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { ProtectedRoute } from '@/app/_components/ProtectedRoute';
 import { useAuth } from '@/app/_components/AuthProvider';
 import { useCognitive } from '@/app/_components/CognitiveProvider';
+import { useCognitiveLayout } from '@/app/_components/hooks/useCognitiveLayout';
 import { useRouter } from 'next/navigation';
 import { useCases } from '@/app/_infrastructure/di/container';
 import { Task, TaskState } from '@/app/_domain/entities/Task';
@@ -16,6 +17,7 @@ import { DroppableColumn } from '@/app/_components/DroppableColumn';
 export default function DashboardPage() {
   const { user, isGuest, logout } = useAuth();
   const { preferences } = useCognitive();
+  const layout = useCognitiveLayout();
   const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showAddTask, setShowAddTask] = useState(false);
@@ -190,7 +192,7 @@ export default function DashboardPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 dark:from-slate-900 dark:to-slate-800">
+      <div className={`min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 dark:from-slate-900 dark:to-slate-800 ${layout.isFullScreen ? 'full-screen-mode' : ''}`}>
         <header className="bg-slate-800/80 dark:bg-slate-800/80 backdrop-blur-sm border-b border-slate-700 dark:border-slate-700">
           <div className="max-w-5xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
             <div className="flex items-center gap-3">
@@ -249,8 +251,17 @@ export default function DashboardPage() {
             </div>
           ) : (
             <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className={`grid gap-4 ${
+              layout.isFullScreen 
+                ? 'grid-cols-1' 
+                : layout.visibleColumns.length === 2 
+                  ? 'grid-cols-1 md:grid-cols-2' 
+                  : layout.visibleColumns.length === 3 
+                    ? 'grid-cols-1 md:grid-cols-3' 
+                    : 'grid-cols-1 md:grid-cols-4'
+            }`}>
               {/* Coluna: Foco */}
+              {layout.visibleColumns.includes('active') && (
               <div className="bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Foco</h3>
@@ -340,8 +351,10 @@ export default function DashboardPage() {
                   )}
                 </DroppableColumn>
               </div>
+              )}
 
               {/* Coluna: Próximas */}
+              {layout.visibleColumns.includes('paused') && (
               <div className="bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Próximas</h3>
@@ -373,8 +386,10 @@ export default function DashboardPage() {
                   )}
                 </DroppableColumn>
               </div>
+              )}
 
               {/* Coluna: Feito */}
+              {layout.visibleColumns.includes('done') && (
               <div className="bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Feito</h3>
@@ -406,6 +421,7 @@ export default function DashboardPage() {
                   )}
                 </DroppableColumn>
               </div>
+              )}
             </div>
             
             <DragOverlay>
