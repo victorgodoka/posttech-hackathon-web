@@ -6,7 +6,7 @@ import { TaskCategory, TASK_CATEGORIES, getCategoryConfig } from '@/app/_domain/
 
 interface AddTaskModalProps {
   mode: 'simple' | 'full';
-  onAdd: (text: string, category: TaskCategory, description?: string) => void;
+  onAdd: (text: string, category: TaskCategory, description?: string, usePomodoro?: boolean) => void;
   onCancel: () => void;
 }
 
@@ -15,17 +15,20 @@ export function AddTaskModal({ mode, onAdd, onCancel }: AddTaskModalProps) {
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<TaskCategory>('other');
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [usePomodoro, setUsePomodoro] = useState(true);
 
   const handleSubmit = () => {
     if (taskName.trim()) {
       onAdd(
         taskName.trim(),
         category,
-        mode === 'full' && description.trim() ? description.trim() : undefined
+        mode === 'full' && description.trim() ? description.trim() : undefined,
+        mode === 'full' ? usePomodoro : true
       );
       setTaskName('');
       setDescription('');
       setCategory('other');
+      setUsePomodoro(true);
     }
   };
 
@@ -109,23 +112,41 @@ export function AddTaskModal({ mode, onAdd, onCancel }: AddTaskModalProps) {
         </div>
       </div>
 
-      {/* Descrição (apenas no modo full) */}
+      {/* Descrição e Pomodoro (apenas no modo full) */}
       {mode === 'full' && (
-        <div>
-          <label htmlFor="task-description" className="block text-sm text-slate-300 mb-2 font-normal">
-            Descrição <span className="text-slate-500">(opcional)</span>
-          </label>
-          <textarea
-            id="task-description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Adicione detalhes sobre a tarefa..."
-            rows={3}
-            className="w-full px-3 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-normal text-base resize-none"
-            aria-label="Digite a descrição da tarefa (opcional)"
-          />
-        </div>
+        <>
+          <div>
+            <label htmlFor="task-description" className="block text-sm text-slate-300 mb-2 font-normal">
+              Descrição <span className="text-slate-500">(opcional)</span>
+            </label>
+            <textarea
+              id="task-description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Adicione detalhes sobre a tarefa..."
+              rows={3}
+              className="w-full px-3 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-normal text-base resize-none"
+              aria-label="Digite a descrição da tarefa (opcional)"
+            />
+          </div>
+          
+          {/* Checkbox Pomodoro */}
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="use-pomodoro"
+              checked={usePomodoro}
+              onChange={(e) => setUsePomodoro(e.target.checked)}
+              className="w-4 h-4 bg-slate-900/50 border border-slate-600 rounded text-indigo-500 focus:ring-2 focus:ring-indigo-500"
+              aria-label="Usar método Pomodoro"
+            />
+            <label htmlFor="use-pomodoro" className="flex items-center gap-2 text-sm text-slate-300 font-normal cursor-pointer">
+              <Icon icon="mdi:timer" className="w-5 h-5 text-indigo-400" />
+              Usar método Pomodoro
+            </label>
+          </div>
+        </>
       )}
 
       {/* Botões de Ação */}

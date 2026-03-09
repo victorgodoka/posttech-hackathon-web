@@ -67,10 +67,10 @@ export default function DashboardPage() {
     router.push('/welcome');
   }
 
-  async function handleAddTask(text: string, category: TaskCategory, description?: string) {
+  async function handleAddTask(text: string, category: TaskCategory, description?: string, usePomodoro?: boolean) {
     try {
       const customColumnId = preferences?.layoutMode === 'custom' && afterColumnId ? afterColumnId : undefined;
-      await useCases.addTask.execute(text, category, description, customColumnId);
+      await useCases.addTask.execute(text, category, description, customColumnId, usePomodoro);
       setShowAddTask(false);
       setAfterColumnId('');
       await loadTasks();
@@ -131,6 +131,8 @@ export default function DashboardPage() {
     try {
       const workDuration = preferences?.pomodoroSettings.workDuration || 25;
       await useCases.startTaskTimer.execute(taskId, workDuration);
+      // Mover tarefa para 'paused' (Fazendo) ao iniciar timer
+      await useCases.updateTaskState.execute(taskId, 'paused');
       await loadTasks();
     } catch (error) {
       showError('Erro ao iniciar timer');
@@ -140,6 +142,8 @@ export default function DashboardPage() {
   async function handlePauseTimer(taskId: string) {
     try {
       await useCases.pauseTaskTimer.execute(taskId);
+      // Voltar tarefa para 'active' (A fazer) ao pausar timer
+      await useCases.updateTaskState.execute(taskId, 'active');
       await loadTasks();
     } catch (error) {
       showError('Erro ao pausar timer');

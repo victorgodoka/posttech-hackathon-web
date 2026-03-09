@@ -9,9 +9,10 @@ export class AddTask {
     text: string, 
     category: TaskCategory = 'other', 
     description?: string, 
-    customColumnId?: string
+    customColumnId?: string,
+    usePomodoro: boolean = true
   ): Promise<void> {
-    const task = Task.create(text, category, description, customColumnId);
+    const task = Task.create(text, category, description, customColumnId, usePomodoro);
     await this.taskRepository.save(task);
   }
 }

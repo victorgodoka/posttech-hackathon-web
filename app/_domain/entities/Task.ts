@@ -27,6 +27,7 @@ export interface TaskProps {
   steps: TaskStep[];
   timer?: TaskTimer;
   customColumnId?: string;
+  usePomodoro: boolean;
 }
 
 export interface TaskJSON {
@@ -39,15 +40,17 @@ export interface TaskJSON {
   steps?: TaskStep[];
   timer?: TaskTimer;
   customColumnId?: string;
+  usePomodoro?: boolean;
 }
 
 export class Task {
   private constructor(private props: TaskProps) {}
 
-  static create(text: string, category: TaskCategory = 'other', description?: string, customColumnId?: string): Task {
+  static create(text: string, category: TaskCategory = 'other', description?: string, customColumnId?: string, usePomodoro: boolean = true): Task {
     return new Task({
       id: crypto.randomUUID(),
       text,
+      usePomodoro,
       description,
       category,
       state: 'active',
@@ -104,6 +107,10 @@ export class Task {
 
   get customColumnId(): string | undefined {
     return this.props.customColumnId;
+  }
+
+  get usePomodoro(): boolean {
+    return this.props.usePomodoro;
   }
 
   updateText(newText: string): void {
@@ -209,7 +216,7 @@ export class Task {
     this.props.timer.startedAt = undefined;
   }
 
-  toJSON() {
+  toJSON(): TaskJSON {
     return {
       id: this.props.id,
       text: this.props.text,
@@ -220,6 +227,7 @@ export class Task {
       steps: this.props.steps,
       timer: this.props.timer,
       customColumnId: this.props.customColumnId,
+      usePomodoro: this.props.usePomodoro,
     };
   }
 
@@ -238,6 +246,7 @@ export class Task {
         isRunning: false,
       },
       customColumnId: data.customColumnId,
+      usePomodoro: data.usePomodoro ?? true,
     });
   }
 }
