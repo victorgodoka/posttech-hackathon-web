@@ -1,7 +1,16 @@
+// IndexedDB Repositories
 import { UserRepositoryIDB } from '../persistence/idb/UserRepositoryIDB';
 import { AuthRepositoryIDB } from '../persistence/idb/AuthRepositoryIDB';
 import { TaskRepositoryIDB } from '../persistence/idb/TaskRepositoryIDB';
 import { PreferencesRepositoryIDB } from '../persistence/idb/PreferencesRepositoryIDB';
+
+// Firebase Repositories
+import { UserRepositoryFirebase } from '../persistence/firebase/UserRepositoryFirebase';
+import { AuthRepositoryFirebase } from '../persistence/firebase/AuthRepositoryFirebase';
+import { TaskRepositoryFirebase } from '../persistence/firebase/TaskRepositoryFirebase';
+import { PreferencesRepositoryFirebase } from '../persistence/firebase/PreferencesRepositoryFirebase';
+
+// Use Cases
 import { RegisterUser } from '@/app/_application/use-cases/RegisterUser';
 import { LoginUser } from '@/app/_application/use-cases/LoginUser';
 import { LogoutUser } from '@/app/_application/use-cases/LogoutUser';
@@ -23,10 +32,14 @@ import { GetUserPreferences } from '@/app/_application/use-cases/GetUserPreferen
 import { UpdateUserPreferences } from '@/app/_application/use-cases/UpdateUserPreferences';
 import { UpdateTaskCustomColumn } from '@/app/_application/use-cases/UpdateTaskCustomColumn';
 
-const userRepository = new UserRepositoryIDB();
-const authRepository = new AuthRepositoryIDB();
-const taskRepository = new TaskRepositoryIDB();
-const preferencesRepository = new PreferencesRepositoryIDB();
+// Escolher backend baseado em variável de ambiente
+const USE_FIREBASE = process.env.NEXT_PUBLIC_USE_FIREBASE === 'true';
+
+// Instanciar repositórios baseado na escolha
+const userRepository = USE_FIREBASE ? new UserRepositoryFirebase() : new UserRepositoryIDB();
+const authRepository = USE_FIREBASE ? new AuthRepositoryFirebase() : new AuthRepositoryIDB();
+const taskRepository = USE_FIREBASE ? new TaskRepositoryFirebase() : new TaskRepositoryIDB();
+const preferencesRepository = USE_FIREBASE ? new PreferencesRepositoryFirebase() : new PreferencesRepositoryIDB();
 
 export const useCases = {
   registerUser: new RegisterUser(userRepository),
