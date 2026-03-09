@@ -24,8 +24,23 @@ interface MindEaseDB extends DBSchema {
     value: {
       id: string;
       text: string;
+      description?: string;
+      category?: string;
       state: 'active' | 'paused' | 'done';
       createdAt: string;
+      steps?: Array<{
+        id: string;
+        text: string;
+        completed: boolean;
+      }>;
+      timer?: {
+        mode: 'work' | 'break' | 'idle';
+        remainingSeconds: number;
+        isRunning: boolean;
+        startedAt?: number;
+      };
+      customColumnId?: string;
+      usePomodoro?: boolean;
     };
   };
   preferences: {
