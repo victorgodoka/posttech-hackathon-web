@@ -27,8 +27,13 @@ export function CognitiveStyles() {
     root.classList.remove('layout-list', 'layout-complete', 'layout-custom');
     root.classList.add(`layout-${preferences.layoutMode}`);
 
-    // Animations (sempre ativadas no MindEase - suaves por padrão)
-    root.style.setProperty('--animation-duration', '300ms');
+    // Animations adaptativas baseadas em visualComplexity
+    const animationDurations = {
+      minimal: '100ms',
+      balanced: '200ms',
+      informative: '300ms',
+    };
+    root.style.setProperty('--animation-duration', animationDurations[preferences.visualComplexity]);
 
   }, [preferences]);
 

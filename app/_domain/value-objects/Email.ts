@@ -2,10 +2,11 @@ export class Email {
   private constructor(private readonly value: string) {}
 
   static create(email: string): Email {
-    if (!Email.isValid(email)) {
+    const normalized = email.toLowerCase().trim();
+    if (!Email.isValid(normalized)) {
       throw new Error('Email inválido');
     }
-    return new Email(email.toLowerCase().trim());
+    return new Email(normalized);
   }
 
   private static isValid(email: string): boolean {
