@@ -1,3 +1,5 @@
+import { TaskCategory } from './TaskCategory';
+
 export type TaskState = 'active' | 'paused' | 'done';
 
 export interface TaskStep {
@@ -18,28 +20,36 @@ export interface TaskTimer {
 export interface TaskProps {
   id: string;
   text: string;
+  description?: string;
+  category: TaskCategory;
   state: TaskState;
   createdAt: Date;
   steps: TaskStep[];
   timer?: TaskTimer;
+  customColumnId?: string;
 }
 
 export interface TaskJSON {
   id: string;
   text: string;
+  description?: string;
+  category?: string;
   state: string;
   createdAt: string;
   steps?: TaskStep[];
   timer?: TaskTimer;
+  customColumnId?: string;
 }
 
 export class Task {
   private constructor(private props: TaskProps) {}
 
-  static create(text: string): Task {
+  static create(text: string, category: TaskCategory = 'other', description?: string, customColumnId?: string): Task {
     return new Task({
       id: crypto.randomUUID(),
       text,
+      description,
+      category,
       state: 'active',
       createdAt: new Date(),
       steps: [],
@@ -48,6 +58,7 @@ export class Task {
         remainingSeconds: 25 * 60,
         isRunning: false,
       },
+      customColumnId,
     });
   }
 
@@ -61,6 +72,14 @@ export class Task {
 
   get text(): string {
     return this.props.text;
+  }
+
+  get description(): string | undefined {
+    return this.props.description;
+  }
+
+  get category(): TaskCategory {
+    return this.props.category;
   }
 
   get state(): TaskState {
@@ -83,8 +102,20 @@ export class Task {
     };
   }
 
+  get customColumnId(): string | undefined {
+    return this.props.customColumnId;
+  }
+
   updateText(newText: string): void {
     this.props.text = newText;
+  }
+
+  updateState(state: TaskState): void {
+    this.props.state = state;
+  }
+
+  updateCustomColumnId(columnId: string | undefined): void {
+    this.props.customColumnId = columnId;
   }
 
   pause(): void {
@@ -119,11 +150,11 @@ export class Task {
     this.props.steps = this.props.steps.filter(s => s.id !== stepId);
   }
 
-  startTimer(): void {
+  startTimer(workDuration: number = 25): void {
     if (!this.props.timer) {
       this.props.timer = {
         mode: 'work',
-        remainingSeconds: 25 * 60,
+        remainingSeconds: workDuration * 60,
         isRunning: true,
         startedAt: Date.now(),
       };
@@ -140,19 +171,18 @@ export class Task {
     }
   }
 
-  resetTimer(): void {
-    const workDuration = 25 * 60;
-    const breakDuration = 5 * 60;
+  resetTimer(workDuration: number = 25): void {
+    const workSeconds = workDuration * 60;
     
     if (!this.props.timer) {
       this.props.timer = {
         mode: 'idle',
-        remainingSeconds: workDuration,
+        remainingSeconds: workSeconds,
         isRunning: false,
       };
     } else {
       this.props.timer.mode = 'idle';
-      this.props.timer.remainingSeconds = workDuration;
+      this.props.timer.remainingSeconds = workSeconds;
       this.props.timer.isRunning = false;
       this.props.timer.startedAt = undefined;
     }
@@ -164,15 +194,15 @@ export class Task {
     }
   }
 
-  completeTimerCycle(): void {
+  completeTimerCycle(workDuration: number = 25, breakDuration: number = 5): void {
     if (!this.props.timer) return;
 
     if (this.props.timer.mode === 'work') {
       this.props.timer.mode = 'break';
-      this.props.timer.remainingSeconds = 5 * 60;
+      this.props.timer.remainingSeconds = breakDuration * 60;
     } else if (this.props.timer.mode === 'break') {
       this.props.timer.mode = 'work';
-      this.props.timer.remainingSeconds = 25 * 60;
+      this.props.timer.remainingSeconds = workDuration * 60;
     }
     
     this.props.timer.isRunning = false;
@@ -183,10 +213,13 @@ export class Task {
     return {
       id: this.props.id,
       text: this.props.text,
+      description: this.props.description,
+      category: this.props.category,
       state: this.props.state,
       createdAt: this.props.createdAt.toISOString(),
       steps: this.props.steps,
       timer: this.props.timer,
+      customColumnId: this.props.customColumnId,
     };
   }
 
@@ -194,6 +227,8 @@ export class Task {
     return Task.fromPersistence({
       id: data.id,
       text: data.text,
+      description: data.description,
+      category: (data.category as TaskCategory) || 'other',
       state: data.state as TaskState,
       createdAt: new Date(data.createdAt),
       steps: data.steps || [],
@@ -202,6 +237,7 @@ export class Task {
         remainingSeconds: 25 * 60,
         isRunning: false,
       },
+      customColumnId: data.customColumnId,
     });
   }
 }

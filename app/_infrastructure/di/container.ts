@@ -21,6 +21,7 @@ import { UpdateTaskTimer } from '@/app/_application/use-cases/UpdateTaskTimer';
 import { CompleteTimerCycle } from '@/app/_application/use-cases/CompleteTimerCycle';
 import { GetUserPreferences } from '@/app/_application/use-cases/GetUserPreferences';
 import { UpdateUserPreferences } from '@/app/_application/use-cases/UpdateUserPreferences';
+import { UpdateTaskCustomColumn } from '@/app/_application/use-cases/UpdateTaskCustomColumn';
 
 const userRepository = new UserRepositoryIDB();
 const authRepository = new AuthRepositoryIDB();
@@ -47,4 +48,5 @@ export const useCases = {
   completeTimerCycle: new CompleteTimerCycle(taskRepository),
   getUserPreferences: new GetUserPreferences(preferencesRepository),
   updateUserPreferences: new UpdateUserPreferences(preferencesRepository),
+  updateTaskCustomColumn: new UpdateTaskCustomColumn(taskRepository),
 };

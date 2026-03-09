@@ -5,10 +5,11 @@ import { useCognitive } from '@/app/_components/CognitiveProvider';
 import { useAuth } from '@/app/_components/AuthProvider';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { LayoutMode, VisualComplexity, InformationDensity, TextSize, NotificationTiming } from '@/app/_domain/entities/UserPreferences';
+import { Icon } from '@iconify/react';
+import { LayoutMode, VisualComplexity, InformationDensity, TextSize, NotificationTiming, TaskCreationMode } from '@/app/_domain/entities/UserPreferences';
 
 export default function SettingsPage() {
-  const { preferences, loading, updateLayoutMode, updateOverloadBehavior, updateVisualComplexity, updateInformationDensity, updateTextSize, updateNotificationTiming } = useCognitive();
+  const { preferences, loading, updateLayoutMode, updateAllowExtraCustomColumns, updateOverloadBehavior, updateVisualComplexity, updateInformationDensity, updateTextSize, updateNotificationTiming, updateTaskCreationMode, updatePomodoroSettings } = useCognitive();
   const { logout } = useAuth();
   const router = useRouter();
 
@@ -91,8 +92,11 @@ export default function SettingsPage() {
                     onChange={() => updateLayoutMode('list')}
                     className="mt-0.5 w-4 h-4 text-amber-500 border-slate-500 focus:ring-amber-500 focus:ring-offset-0"
                   />
-                  <div className="ml-3">
-                    <p className="text-sm text-slate-200 font-normal">Lista</p>
+                  <div className="ml-3 flex-1">
+                    <div className="flex items-center gap-2">
+                      <Icon icon="mdi:format-list-bulleted" className="w-4 h-4 text-amber-500" />
+                      <p className="text-sm text-slate-200 font-normal">Lista</p>
+                    </div>
                     <p className="text-xs text-slate-400 font-normal mt-0.5">Apenas 1 coluna de afazeres + botão de histórico</p>
                   </div>
                 </label>
@@ -109,8 +113,11 @@ export default function SettingsPage() {
                     onChange={() => updateLayoutMode('complete')}
                     className="mt-0.5 w-4 h-4 text-amber-500 border-slate-500 focus:ring-amber-500 focus:ring-offset-0"
                   />
-                  <div className="ml-3">
-                    <p className="text-sm text-slate-200 font-normal">Completo</p>
+                  <div className="ml-3 flex-1">
+                    <div className="flex items-center gap-2">
+                      <Icon icon="mdi:view-column" className="w-4 h-4 text-amber-500" />
+                      <p className="text-sm text-slate-200 font-normal">Completo</p>
+                    </div>
                     <p className="text-xs text-slate-400 font-normal mt-0.5">A fazer • Fazendo • Completo</p>
                   </div>
                 </label>
@@ -127,11 +134,34 @@ export default function SettingsPage() {
                     onChange={() => updateLayoutMode('custom')}
                     className="mt-0.5 w-4 h-4 text-amber-500 border-slate-500 focus:ring-amber-500 focus:ring-offset-0"
                   />
-                  <div className="ml-3">
-                    <p className="text-sm text-slate-200 font-normal">Customizado</p>
+                  <div className="ml-3 flex-1">
+                    <div className="flex items-center gap-2">
+                      <Icon icon="mdi:tune-variant" className="w-4 h-4 text-amber-500" />
+                      <p className="text-sm text-slate-200 font-normal">Customizado</p>
+                    </div>
                     <p className="text-xs text-slate-400 font-normal mt-0.5">Crie suas próprias colunas personalizadas</p>
                   </div>
                 </label>
+
+                {/* Checkbox para ultrapassar limite de colunas - só aparece se modo customizado estiver ativo */}
+                {preferences.layoutMode === 'custom' && (
+                  <div className="ml-7 mt-2 p-3 bg-slate-700/30 rounded-lg border border-slate-600/50">
+                    <label className="flex items-start cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={preferences.allowExtraCustomColumns}
+                        onChange={(e) => updateAllowExtraCustomColumns(e.target.checked)}
+                        className="mt-0.5 w-4 h-4 text-amber-500 border-slate-500 focus:ring-amber-500 focus:ring-offset-0 rounded"
+                      />
+                      <div className="ml-3">
+                        <p className="text-sm text-slate-200 font-normal">Ultrapassar limite padrão de colunas personalizadas</p>
+                        <p className="text-xs text-slate-400 font-normal mt-0.5">
+                          Padrão: 3 colunas • Com esta opção: até 5 colunas
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                )}
               </div>
             </section>
 
@@ -281,7 +311,57 @@ export default function SettingsPage() {
               </div>
             </section>
 
-            {/* Bloco 6: Notificações Conscientes */}
+            {/* Bloco 6: Modo de Criação de Tarefas */}
+            <section className="bg-slate-800/40 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6">
+              <h3 className="text-base font-medium text-slate-200 mb-2">Como você prefere criar tarefas?</h3>
+              <p className="text-xs text-slate-400 font-normal mb-4">Escolha entre criação rápida ou detalhada</p>
+              
+              <div className="space-y-3">
+                <label className={`flex items-start p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                  preferences.taskCreationMode === 'simple'
+                    ? 'border-indigo-600/60 bg-indigo-900/10'
+                    : 'border-slate-600/50 hover:border-slate-500'
+                }`}>
+                  <input
+                    type="radio"
+                    name="taskCreationMode"
+                    checked={preferences.taskCreationMode === 'simple'}
+                    onChange={() => updateTaskCreationMode('simple')}
+                    className="mt-0.5 w-4 h-4 text-indigo-500 border-slate-500 focus:ring-indigo-500 focus:ring-offset-0"
+                  />
+                  <div className="ml-3">
+                    <div className="flex items-center gap-2">
+                      <Icon icon="mdi:lightning-bolt" className="w-4 h-4 text-indigo-400" />
+                      <p className="text-sm text-slate-200 font-normal">Simples</p>
+                    </div>
+                    <p className="text-xs text-slate-400 font-normal mt-0.5">Apenas título e categoria</p>
+                  </div>
+                </label>
+
+                <label className={`flex items-start p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                  preferences.taskCreationMode === 'full'
+                    ? 'border-indigo-600/60 bg-indigo-900/10'
+                    : 'border-slate-600/50 hover:border-slate-500'
+                }`}>
+                  <input
+                    type="radio"
+                    name="taskCreationMode"
+                    checked={preferences.taskCreationMode === 'full'}
+                    onChange={() => updateTaskCreationMode('full')}
+                    className="mt-0.5 w-4 h-4 text-indigo-500 border-slate-500 focus:ring-indigo-500 focus:ring-offset-0"
+                  />
+                  <div className="ml-3">
+                    <div className="flex items-center gap-2">
+                      <Icon icon="mdi:text-box-multiple" className="w-4 h-4 text-indigo-400" />
+                      <p className="text-sm text-slate-200 font-normal">Completo</p>
+                    </div>
+                    <p className="text-xs text-slate-400 font-normal mt-0.5">Título, categoria e descrição</p>
+                  </div>
+                </label>
+              </div>
+            </section>
+
+            {/* Bloco 7: Notificações Conscientes */}
             <section className="bg-slate-800/40 backdrop-blur-sm rounded-xl border border-slate-700/50 p-6">
               <h3 className="text-base font-medium text-slate-200 mb-2">Quando você gostaria de ser lembrado?</h3>
               <p className="text-xs text-slate-400 font-normal mb-4">O MindEase evita interrupções desnecessárias</p>
@@ -340,6 +420,65 @@ export default function SettingsPage() {
                     <p className="text-xs text-slate-400 font-normal mt-0.5">Lembrete suave após inatividade</p>
                   </div>
                 </label>
+              </div>
+            </section>
+
+            {/* Configurações de Pomodoro */}
+            <section className="bg-slate-800/40 backdrop-blur-sm rounded-xl border border-slate-700 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <Icon icon="mdi:timer-outline" className="w-6 h-6 text-indigo-400" />
+                <div>
+                  <h2 className="text-lg font-medium text-slate-100">Timer Pomodoro</h2>
+                  <p className="text-sm text-slate-400 font-normal">Configure a duração dos ciclos de trabalho e pausa</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="workDuration" className="block text-sm text-slate-300 font-normal mb-2">
+                    Duração do trabalho (minutos)
+                  </label>
+                  <input
+                    id="workDuration"
+                    type="number"
+                    min="1"
+                    max="60"
+                    value={preferences.pomodoroSettings.workDuration}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 25;
+                      updatePomodoroSettings({
+                        workDuration: value,
+                        breakDuration: preferences.pomodoroSettings.breakDuration,
+                      });
+                    }}
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    aria-label="Duração do trabalho em minutos"
+                  />
+                  <p className="text-xs text-slate-500 font-normal mt-1">Recomendado: 25 minutos</p>
+                </div>
+
+                <div>
+                  <label htmlFor="breakDuration" className="block text-sm text-slate-300 font-normal mb-2">
+                    Duração da pausa (minutos)
+                  </label>
+                  <input
+                    id="breakDuration"
+                    type="number"
+                    min="1"
+                    max="30"
+                    value={preferences.pomodoroSettings.breakDuration}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 5;
+                      updatePomodoroSettings({
+                        workDuration: preferences.pomodoroSettings.workDuration,
+                        breakDuration: value,
+                      });
+                    }}
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    aria-label="Duração da pausa em minutos"
+                  />
+                  <p className="text-xs text-slate-500 font-normal mt-1">Recomendado: 5 minutos</p>
+                </div>
               </div>
             </section>
           </div>

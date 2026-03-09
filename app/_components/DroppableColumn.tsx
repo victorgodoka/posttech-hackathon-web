@@ -18,10 +18,9 @@ export function DroppableColumn({ id, children, items }: DroppableColumnProps) {
   return (
     <div
       ref={setNodeRef}
-      className={`space-y-3 min-h-[200px] h-full overflow-y-auto transition-all duration-200 ${
+      className={`space-y-3 min-h-[200px] h-full transition-all duration-200 ${
         isOver ? 'bg-slate-700/30 rounded-lg' : ''
       }`}
-      style={{ scrollbarWidth: 'thin' }}
     >
       <SortableContext items={items} strategy={verticalListSortingStrategy}>
         {children}

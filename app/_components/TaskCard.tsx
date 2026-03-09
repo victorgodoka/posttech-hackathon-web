@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Task, TaskState, TaskStep } from '@/app/_domain/entities/Task';
+import { getCategoryConfig } from '@/app/_domain/entities/TaskCategory';
+import { Icon } from '@iconify/react';
 import { PomodoroTimer } from './PomodoroTimer';
 import { useCognitiveLayout } from './hooks/useCognitiveLayout';
 
@@ -72,12 +74,24 @@ export function TaskCard({
 
   const colors = stateColors[task.state];
 
+  const categoryConfig = getCategoryConfig(task.category);
+
   return (
     <div className={`p-3 ${colors.bg} border ${colors.border} rounded-lg group ${colors.hoverBorder} transition-all duration-300 ease-out animate-fade-slide-in`}>
-      {/* Texto da tarefa */}
-      <p className={`text-base text-slate-200 dark:text-slate-200 font-normal mb-2 ${task.state === 'done' ? 'line-through text-slate-400 dark:text-slate-400' : ''}`}>
-        {task.text}
-      </p>
+      {/* Categoria e Texto da tarefa */}
+      <div className="flex items-start gap-2 mb-2">
+        <Icon icon={categoryConfig.icon} className={`w-5 h-5 ${categoryConfig.color} flex-shrink-0 mt-0.5`} />
+        <div className="flex-1">
+          <p className={`text-base text-slate-200 dark:text-slate-200 font-normal ${task.state === 'done' ? 'line-through text-slate-400 dark:text-slate-400' : ''}`}>
+            {task.text}
+          </p>
+          {task.description && (
+            <p className="text-sm text-slate-400 dark:text-slate-400 font-normal mt-1">
+              {task.description}
+            </p>
+          )}
+        </div>
+      </div>
 
       {/* Timer Pomodoro - apenas para tarefa principal em foco e se densidade permitir */}
       {layout.showTimer && task.state === 'active' && isPrimaryFocus && onStartTimer && onPauseTimer && onResetTimer && onCompleteTimer && (

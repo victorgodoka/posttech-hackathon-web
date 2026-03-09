@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { Icon } from '@iconify/react';
 import { ProtectedRoute } from '@/app/_components/ProtectedRoute';
 import { useAuth } from '@/app/_components/AuthProvider';
 import { useCognitive } from '@/app/_components/CognitiveProvider';
@@ -14,6 +15,9 @@ import { TaskCard } from '@/app/_components/TaskCard';
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { DraggableTaskCard } from '@/app/_components/DraggableTaskCard';
 import { DroppableColumn } from '@/app/_components/DroppableColumn';
+import { Onboarding } from '@/app/_components/Onboarding';
+import { AddTaskModal } from '@/app/_components/AddTaskModal';
+import { TaskCategory } from '@/app/_domain/entities/TaskCategory';
 
 export default function DashboardPage() {
   const { user, isGuest, logout } = useAuth();
@@ -23,10 +27,10 @@ export default function DashboardPage() {
   const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showAddTask, setShowAddTask] = useState(false);
-  const [taskInput, setTaskInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
   const [showAddColumn, setShowAddColumn] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [newColumnName, setNewColumnName] = useState('');
   const [afterColumnId, setAfterColumnId] = useState<string>('');
   const [editingColumnId, setEditingColumnId] = useState<string | null>(null);
@@ -34,6 +38,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadTasks();
+    
+    // Verificar se é primeira visita para exibir onboarding
+    const hasSeenOnboarding = localStorage.getItem('mindease-onboarding-completed');
+    if (!hasSeenOnboarding) {
+      setShowOnboarding(true);
+    }
   }, []);
 
   async function loadTasks() {
@@ -47,22 +57,26 @@ export default function DashboardPage() {
     }
   }
 
+  function handleCompleteOnboarding() {
+    localStorage.setItem('mindease-onboarding-completed', 'true');
+    setShowOnboarding(false);
+  }
+
   async function handleLogout() {
     await logout();
     router.push('/welcome');
   }
 
-  async function handleAddTask() {
-    if (taskInput.trim()) {
-      try {
-        await useCases.addTask.execute(taskInput.trim());
-        await loadTasks();
-        setTaskInput('');
-        setShowAddTask(false);
-        showSuccess('Tarefa adicionada');
-      } catch (error) {
-        showError('Erro ao adicionar tarefa');
-      }
+  async function handleAddTask(text: string, category: TaskCategory, description?: string) {
+    try {
+      const customColumnId = preferences?.layoutMode === 'custom' && afterColumnId ? afterColumnId : undefined;
+      await useCases.addTask.execute(text, category, description, customColumnId);
+      setShowAddTask(false);
+      setAfterColumnId('');
+      await loadTasks();
+      showSuccess('Tarefa adicionada');
+    } catch (error) {
+      showError('Erro ao adicionar tarefa');
     }
   }
 
@@ -115,7 +129,8 @@ export default function DashboardPage() {
 
   async function handleStartTimer(taskId: string) {
     try {
-      await useCases.startTaskTimer.execute(taskId);
+      const workDuration = preferences?.pomodoroSettings.workDuration || 25;
+      await useCases.startTaskTimer.execute(taskId, workDuration);
       await loadTasks();
     } catch (error) {
       showError('Erro ao iniciar timer');
@@ -133,7 +148,8 @@ export default function DashboardPage() {
 
   async function handleResetTimer(taskId: string) {
     try {
-      await useCases.resetTaskTimer.execute(taskId);
+      const workDuration = preferences?.pomodoroSettings.workDuration || 25;
+      await useCases.resetTaskTimer.execute(taskId, workDuration);
       await loadTasks();
     } catch (error) {
       showError('Erro ao resetar timer');
@@ -142,7 +158,9 @@ export default function DashboardPage() {
 
   async function handleCompleteTimer(taskId: string) {
     try {
-      await useCases.completeTimerCycle.execute(taskId);
+      const workDuration = preferences?.pomodoroSettings.workDuration || 25;
+      const breakDuration = preferences?.pomodoroSettings.breakDuration || 5;
+      await useCases.completeTimerCycle.execute(taskId, workDuration, breakDuration);
       await loadTasks();
       
       const task = tasks.find(t => t.id === taskId);
@@ -159,6 +177,14 @@ export default function DashboardPage() {
   async function handleAddCustomColumn() {
     if (newColumnName.trim()) {
       try {
+        const maxColumns = preferences?.allowExtraCustomColumns ? 5 : 3;
+        const currentCount = preferences?.customColumns?.length || 0;
+        
+        if (currentCount >= maxColumns) {
+          showError(`Limite de ${maxColumns} colunas atingido. ${!preferences?.allowExtraCustomColumns ? 'Ative "Ultrapassar limite" nas configurações para criar até 5 colunas.' : ''}`);
+          return;
+        }
+        
         const hasColumns = preferences?.customColumns && preferences.customColumns.length > 0;
         const columnIdToUse = hasColumns && afterColumnId ? afterColumnId : undefined;
         await addCustomColumn(newColumnName.trim(), columnIdToUse);
@@ -225,12 +251,32 @@ export default function DashboardPage() {
     if (!over) return;
 
     const taskId = active.id as string;
-    const newState = over.id as TaskState;
+    const targetId = over.id as string;
 
     const task = tasks.find(t => t.id === taskId);
-    if (!task || task.state === newState) return;
+    if (!task) return;
 
-    await handleUpdateTaskState(taskId, newState);
+    // Modo customizado: atualizar customColumnId
+    if (preferences?.layoutMode === 'custom') {
+      // Verificar se é uma coluna customizada válida
+      const isCustomColumn = preferences.customColumns.some(col => col.id === targetId);
+      
+      if (!isCustomColumn) return; // Não é uma coluna customizada válida
+      if (task.customColumnId === targetId) return; // Já está na mesma coluna
+      
+      try {
+        await useCases.updateTaskCustomColumn.execute(taskId, targetId);
+        await loadTasks();
+        showSuccess('Tarefa movida');
+      } catch (error) {
+        showError('Erro ao mover tarefa');
+      }
+    } else {
+      // Modo lista/completo: atualizar state
+      const newState = targetId as TaskState;
+      if (task.state === newState) return;
+      await handleUpdateTaskState(taskId, newState);
+    }
   }
 
   function handleDragStart(event: any) {
@@ -301,21 +347,13 @@ export default function DashboardPage() {
             </div>
           ) : (
             <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-            <div className={`grid gap-4 ${
-              layout.isFullScreen 
-                ? 'grid-cols-1' 
-                : layout.visibleColumns.length === 2 
-                  ? 'grid-cols-1 md:grid-cols-2' 
-                  : layout.visibleColumns.length === 3 
-                    ? 'grid-cols-1 md:grid-cols-3' 
-                    : 'grid-cols-1 md:grid-cols-4'
-            }`}>
-              {/* Coluna: Lista/A fazer */}
+            <div className="flex flex-col md:flex-row gap-4 items-stretch">
+              {/* Coluna: A fazer (lista de tarefas pendentes) */}
               {layout.visibleColumns.includes('active') && (
-              <div className="bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
+              <div className="flex-1 bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">
-                    {preferences?.layoutMode === 'list' ? 'Lista' : preferences?.layoutMode === 'complete' ? 'A fazer' : 'Tarefas'}
+                    {preferences?.layoutMode === 'list' ? 'Lista' : 'A fazer'}
                   </h3>
                   {preferences?.layoutMode === 'list' && doneTasks.length > 0 && (
                     <button
@@ -344,10 +382,11 @@ export default function DashboardPage() {
                       <button
                         onClick={() => setShowAddTask(true)}
                         onKeyDown={(e) => e.key === 'Enter' && setShowAddTask(true)}
-                        className="text-sm text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 font-normal"
+                        className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 font-normal transition-colors"
                         aria-label="Adicionar nova tarefa"
                       >
-                        + Adicionar algo
+                        <Icon icon="mdi:plus-circle-outline" className="w-5 h-5" />
+                        Adicionar algo
                       </button>
                     </div>
                   ) : (
@@ -370,57 +409,19 @@ export default function DashboardPage() {
                       ))}
 
                       {showAddTask ? (
-                        <div className="p-3 bg-slate-700 dark:bg-slate-700 border border-indigo-500 dark:border-indigo-500 rounded-lg">
-                          <input
-                            type="text"
-                            value={taskInput}
-                            onChange={(e) => setTaskInput(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleAddTask();
-                              if (e.key === 'Escape') {
-                                setShowAddTask(false);
-                                setTaskInput('');
-                              }
-                            }}
-                            placeholder="O que está na sua cabeça?"
-                            className="w-full px-0 py-2 text-base text-slate-100 dark:text-slate-100 font-normal border-0 focus:outline-none focus:ring-0 bg-transparent placeholder-slate-400 dark:placeholder-slate-400"
-                            aria-label="Digite o texto da nova tarefa"
-                            autoFocus
-                          />
-                          <div className="flex gap-2 mt-2">
-                            <button
-                              onClick={handleAddTask}
-                              onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
-                              className="px-3 py-1 text-sm bg-indigo-500 hover:bg-indigo-600 text-white rounded transition-colors font-normal"
-                              aria-label="Confirmar e adicionar tarefa"
-                            >
-                              Adicionar
-                            </button>
-                            <button
-                              onClick={() => {
-                                setShowAddTask(false);
-                                setTaskInput('');
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === 'Escape') {
-                                  setShowAddTask(false);
-                                  setTaskInput('');
-                                }
-                              }}
-                              className="px-3 py-1 text-sm text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 transition-colors font-normal"
-                              aria-label="Cancelar adição de tarefa"
-                            >
-                              Cancelar
-                            </button>
-                          </div>
-                        </div>
+                        <AddTaskModal
+                          mode={preferences?.taskCreationMode || 'simple'}
+                          onAdd={handleAddTask}
+                          onCancel={() => setShowAddTask(false)}
+                        />
                       ) : (
                         <button
                           onClick={() => setShowAddTask(true)}
                           onKeyDown={(e) => e.key === 'Enter' && setShowAddTask(true)}
-                          className="w-full p-3 border border-dashed border-slate-600 dark:border-slate-600 rounded-lg text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 hover:border-slate-500 dark:hover:border-slate-500 transition-colors font-normal text-sm"
+                          className="w-full p-3 border border-dashed border-slate-600 dark:border-slate-600 rounded-lg text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 hover:border-slate-500 dark:hover:border-slate-500 transition-colors font-normal text-sm flex items-center justify-center gap-2"
                           aria-label="Adicionar mais uma tarefa"
                         >
+                          <Icon icon="mdi:plus" className="w-4 h-4" />
                           Adicionar mais uma
                         </button>
                       )}
@@ -430,9 +431,16 @@ export default function DashboardPage() {
               </div>
               )}
 
-              {/* Coluna: Fazendo */}
+              {/* Seta entre colunas */}
+              {layout.visibleColumns.includes('active') && layout.visibleColumns.includes('paused') && (
+                <div className="hidden md:flex items-center justify-center">
+                  <Icon icon="mdi:arrow-right" className="w-8 h-8 text-slate-500" />
+                </div>
+              )}
+
+              {/* Coluna: Fazendo (tarefa em execução) */}
               {layout.visibleColumns.includes('paused') && (
-              <div className="bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
+              <div className="flex-1 bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Fazendo</h3>
                 </div>
@@ -465,11 +473,18 @@ export default function DashboardPage() {
               </div>
               )}
 
-              {/* Coluna: Completo */}
+              {/* Seta entre colunas */}
+              {layout.visibleColumns.includes('paused') && layout.visibleColumns.includes('done') && (
+                <div className="hidden md:flex items-center justify-center">
+                  <Icon icon="mdi:arrow-right" className="w-8 h-8 text-slate-500" />
+                </div>
+              )}
+
+              {/* Coluna: Concluído */}
               {layout.visibleColumns.includes('done') && preferences?.layoutMode !== 'custom' && (
-              <div className="bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
+              <div className="flex-1 bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Completo</h3>
+                  <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Concluído</h3>
                 </div>
 
                 <DroppableColumn id="done" items={doneTasks.map(t => t.id)}>
@@ -500,8 +515,167 @@ export default function DashboardPage() {
               </div>
               )}
 
+              {/* Modo Customizado: Coluna de Tarefas Sem Categoria */}
+              {preferences?.layoutMode === 'custom' && (() => {
+                const unassignedTasks = tasks.filter(t => !t.customColumnId);
+                if (unassignedTasks.length === 0) return null;
+                
+                return (
+                  <div className="flex-1 bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Sem Categoria</h3>
+                      <span className="text-xs text-slate-500 dark:text-slate-500">Arraste para organizar</span>
+                    </div>
+                    <DroppableColumn id="unassigned" items={unassignedTasks.map(t => t.id)}>
+                      {unassignedTasks.map((task) => (
+                        <DraggableTaskCard
+                          key={task.id}
+                          task={task}
+                          onUpdateState={handleUpdateTaskState}
+                          onDelete={handleDeleteTask}
+                          onAddStep={handleAddStep}
+                          onToggleStep={handleToggleStep}
+                          onRemoveStep={handleRemoveStep}
+                          onStartTimer={handleStartTimer}
+                          onPauseTimer={handlePauseTimer}
+                          onResetTimer={handleResetTimer}
+                          onCompleteTimer={handleCompleteTimer}
+                        />
+                      ))}
+                    </DroppableColumn>
+                  </div>
+                );
+              })()}
+
+              {/* Modo Customizado: Colunas Personalizadas */}
+              {preferences?.layoutMode === 'custom' && preferences.customColumns
+                .sort((a, b) => a.order - b.order)
+                .map((column, index, array) => {
+                  const columnTasks = tasks.filter(t => t.customColumnId === column.id);
+                  
+                  return (
+                    <React.Fragment key={column.id}>
+                    <div className="flex-1 bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        {editingColumnId === column.id ? (
+                          <input
+                            type="text"
+                            value={editingColumnName}
+                            onChange={(e) => setEditingColumnName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleUpdateCustomColumn(column.id);
+                              if (e.key === 'Escape') {
+                                setEditingColumnId(null);
+                                setEditingColumnName('');
+                              }
+                            }}
+                            onBlur={() => handleUpdateCustomColumn(column.id)}
+                            className="text-lg font-medium text-slate-200 bg-slate-700 px-2 py-1 rounded border border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            aria-label="Editar nome da coluna"
+                            autoFocus
+                          />
+                        ) : (
+                          <h3 
+                            className="text-lg font-medium text-slate-200 cursor-pointer hover:text-indigo-400 transition-colors"
+                            onClick={() => {
+                              setEditingColumnId(column.id);
+                              setEditingColumnName(column.name);
+                            }}
+                            title="Clique para editar"
+                          >
+                            {column.name}
+                          </h3>
+                        )}
+                        <button
+                          onClick={() => handleRemoveCustomColumn(column.id)}
+                          className="text-slate-500 hover:text-red-400 transition-colors"
+                          aria-label={`Remover coluna ${column.name}`}
+                          title="Remover coluna"
+                        >
+                          <Icon icon="mdi:close" className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <DroppableColumn id={column.id} items={columnTasks.map(t => t.id)}>
+                        {columnTasks.length === 0 && !(showAddTask && afterColumnId === column.id) ? (
+                          <div className="flex flex-col items-center justify-center py-12">
+                            <p className="text-slate-400 dark:text-slate-400 font-normal text-base text-center mb-4">
+                              Nada por aqui ainda
+                            </p>
+                            <button
+                              onClick={() => {
+                                setShowAddTask(true);
+                                setAfterColumnId(column.id);
+                              }}
+                              className="flex items-center gap-2 px-4 py-2 text-sm text-indigo-400 hover:text-indigo-300 transition-colors font-normal"
+                              aria-label={`Adicionar primeira tarefa em ${column.name}`}
+                            >
+                              <Icon icon="mdi:plus-circle-outline" className="w-5 h-5" />
+                              Adicionar primeira tarefa
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            {columnTasks.map((task) => (
+                              <DraggableTaskCard
+                                key={task.id}
+                                task={task}
+                                onUpdateState={handleUpdateTaskState}
+                                onDelete={handleDeleteTask}
+                                onAddStep={handleAddStep}
+                                onToggleStep={handleToggleStep}
+                                onRemoveStep={handleRemoveStep}
+                                onStartTimer={handleStartTimer}
+                                onPauseTimer={handlePauseTimer}
+                                onResetTimer={handleResetTimer}
+                                onCompleteTimer={handleCompleteTimer}
+                              />
+                            ))}
+
+                            {showAddTask && afterColumnId === column.id ? (
+                              <AddTaskModal
+                                mode={preferences?.taskCreationMode || 'simple'}
+                                onAdd={handleAddTask}
+                                onCancel={() => {
+                                  setShowAddTask(false);
+                                  setAfterColumnId('');
+                                }}
+                              />
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setShowAddTask(true);
+                                  setAfterColumnId(column.id);
+                                }}
+                                className="w-full p-3 border border-dashed border-slate-600 dark:border-slate-600 rounded-lg text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 hover:border-slate-500 dark:hover:border-slate-500 transition-colors font-normal text-sm flex items-center justify-center gap-2"
+                                aria-label={`Adicionar tarefa em ${column.name}`}
+                              >
+                                <Icon icon="mdi:plus" className="w-4 h-4" />
+                                Adicionar mais uma
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </DroppableColumn>
+                    </div>
+
+                    {/* Seta entre colunas customizadas */}
+                    {index < array.length - 1 && (
+                      <div className="hidden md:flex items-center justify-center">
+                        <Icon icon="mdi:arrow-right" className="w-8 h-8 text-slate-500" />
+                      </div>
+                    )}
+                    </React.Fragment>
+                  );
+                })}
+
               {/* Modo Customizado: Botão + para Adicionar Coluna */}
-              {preferences?.layoutMode === 'custom' && (
+              {preferences?.layoutMode === 'custom' && (() => {
+                const maxColumns = preferences.allowExtraCustomColumns ? 5 : 3;
+                const currentCount = preferences.customColumns?.length || 0;
+                const canAddMore = currentCount < maxColumns;
+                
+                return canAddMore ? (
                 <div className="bg-slate-800/30 backdrop-blur-sm rounded-xl border-2 border-dashed border-slate-600 dark:border-slate-600 p-4 flex items-center justify-center min-h-[200px]">
                   {showAddColumn ? (
                     <div className="w-full space-y-3">
@@ -564,9 +738,10 @@ export default function DashboardPage() {
                           onClick={handleAddCustomColumn}
                           onKeyDown={(e) => e.key === 'Enter' && handleAddCustomColumn()}
                           disabled={preferences?.customColumns.length > 0 && !afterColumnId}
-                          className="px-3 py-1 text-sm bg-indigo-500 hover:bg-indigo-600 disabled:bg-slate-600 disabled:cursor-not-allowed text-white rounded transition-colors font-normal"
+                          className="flex items-center gap-1.5 px-3 py-1 text-sm bg-indigo-500 hover:bg-indigo-600 disabled:bg-slate-600 disabled:cursor-not-allowed text-white rounded transition-colors font-normal"
                           aria-label="Confirmar e adicionar coluna"
                         >
+                          <Icon icon="mdi:check" className="w-4 h-4" />
                           Adicionar
                         </button>
                         <button
@@ -582,9 +757,10 @@ export default function DashboardPage() {
                               setAfterColumnId('');
                             }
                           }}
-                          className="px-3 py-1 text-sm text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 transition-colors font-normal"
+                          className="flex items-center gap-1.5 px-3 py-1 text-sm text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 transition-colors font-normal"
                           aria-label="Cancelar adição de coluna"
                         >
+                          <Icon icon="mdi:close" className="w-4 h-4" />
                           Cancelar
                         </button>
                       </div>
@@ -593,17 +769,16 @@ export default function DashboardPage() {
                     <button
                       onClick={() => setShowAddColumn(true)}
                       onKeyDown={(e) => e.key === 'Enter' && setShowAddColumn(true)}
-                      className="flex flex-col items-center gap-2 text-slate-500 hover:text-slate-300 transition-colors"
+                      className="flex items-center gap-2 text-slate-500 hover:text-slate-300 transition-colors"
                       aria-label="Adicionar nova coluna personalizada"
                     >
-                      <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
-                      </svg>
+                      <Icon icon="mdi:view-column-outline" className="w-12 h-12" />
                       <span className="text-sm font-normal">Adicionar coluna</span>
                     </button>
                   )}
                 </div>
-              )}
+                ) : null;
+              })()}
             </div>
 
             {/* Modal de Histórico - Modo Lista */}
@@ -614,10 +789,9 @@ export default function DashboardPage() {
                   <button
                     onClick={() => setShowHistory(false)}
                     className="text-slate-400 hover:text-slate-200 transition-colors"
+                    aria-label="Fechar histórico"
                   >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <Icon icon="mdi:close" className="w-5 h-5" />
                   </button>
                 </div>
                 <div className="space-y-2">
@@ -627,14 +801,18 @@ export default function DashboardPage() {
                       <div className="flex gap-2 mt-2">
                         <button
                           onClick={() => handleUpdateTaskState(task.id, 'active')}
-                          className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                          className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                          aria-label={`Reabrir tarefa: ${task.text}`}
                         >
+                          <Icon icon="mdi:restore" className="w-3.5 h-3.5" />
                           Reabrir
                         </button>
                         <button
                           onClick={() => handleDeleteTask(task.id)}
-                          className="text-xs text-slate-500 hover:text-slate-300 transition-colors ml-auto"
+                          className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300 transition-colors ml-auto"
+                          aria-label={`Remover tarefa: ${task.text}`}
                         >
+                          <Icon icon="mdi:delete-outline" className="w-3.5 h-3.5" />
                           Remover
                         </button>
                       </div>
@@ -676,6 +854,9 @@ export default function DashboardPage() {
           )}
         </main>
       </div>
+
+      {/* Onboarding para novos usuários */}
+      {showOnboarding && <Onboarding onComplete={handleCompleteOnboarding} />}
     </ProtectedRoute>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { UserPreferences, LayoutMode, CustomColumn, VisualComplexity, InformationDensity, TextSize, NotificationTiming } from '@/app/_domain/entities/UserPreferences';
+import { UserPreferences, LayoutMode, CustomColumn, VisualComplexity, InformationDensity, TextSize, NotificationTiming, TaskCreationMode, PomodoroSettings } from '@/app/_domain/entities/UserPreferences';
 import { useCases } from '@/app/_infrastructure/di/container';
 import { useAuth } from './AuthProvider';
 
@@ -12,11 +12,14 @@ interface CognitiveContextValue {
   addCustomColumn: (name: string, afterColumnId?: string) => Promise<void>;
   updateCustomColumn: (columnId: string, name: string) => Promise<void>;
   removeCustomColumn: (columnId: string) => Promise<void>;
+  updateAllowExtraCustomColumns: (allow: boolean) => Promise<void>;
   updateOverloadBehavior: (behavior: 'warn-only' | 'suggest-move' | 'no-warning') => Promise<void>;
   updateVisualComplexity: (complexity: VisualComplexity) => Promise<void>;
   updateInformationDensity: (density: InformationDensity) => Promise<void>;
   updateTextSize: (size: TextSize) => Promise<void>;
   updateNotificationTiming: (timing: NotificationTiming) => Promise<void>;
+  updateTaskCreationMode: (mode: TaskCreationMode) => Promise<void>;
+  updatePomodoroSettings: (settings: PomodoroSettings) => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -75,6 +78,14 @@ export function CognitiveProvider({ children }: { children: ReactNode }) {
     setPreferences(updated);
   }
 
+  async function updateAllowExtraCustomColumns(allow: boolean) {
+    if (!preferences) return;
+    const userId = user?.id || 'guest-user';
+    preferences.updateAllowExtraCustomColumns(allow);
+    const updated = await useCases.updateUserPreferences.execute(userId, { allowExtraCustomColumns: allow });
+    setPreferences(updated);
+  }
+
   async function updateOverloadBehavior(behavior: 'warn-only' | 'suggest-move' | 'no-warning') {
     const userId = user?.id || 'guest-user';
     const updated = await useCases.updateUserPreferences.execute(userId, { overloadBehavior: behavior });
@@ -105,6 +116,18 @@ export function CognitiveProvider({ children }: { children: ReactNode }) {
     setPreferences(updated);
   }
 
+  async function updateTaskCreationMode(mode: TaskCreationMode) {
+    const userId = user?.id || 'guest-user';
+    const updated = await useCases.updateUserPreferences.execute(userId, { taskCreationMode: mode });
+    setPreferences(updated);
+  }
+
+  async function updatePomodoroSettings(settings: PomodoroSettings) {
+    const userId = user?.id || 'guest-user';
+    const updated = await useCases.updateUserPreferences.execute(userId, { pomodoroSettings: settings });
+    setPreferences(updated);
+  }
+
   return (
     <CognitiveContext.Provider
       value={{
@@ -114,11 +137,14 @@ export function CognitiveProvider({ children }: { children: ReactNode }) {
         addCustomColumn,
         updateCustomColumn,
         removeCustomColumn,
+        updateAllowExtraCustomColumns,
         updateOverloadBehavior,
         updateVisualComplexity,
         updateInformationDensity,
         updateTextSize,
         updateNotificationTiming,
+        updateTaskCreationMode,
+        updatePomodoroSettings,
         refresh: loadPreferences,
       }}
     >

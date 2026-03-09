@@ -10,16 +10,25 @@ export type VisualComplexity = 'minimal' | 'balanced' | 'informative';
 export type InformationDensity = 'essential' | 'complete';
 export type TextSize = 'small' | 'medium' | 'large';
 export type NotificationTiming = 'only-when-asked' | 'focus-ends' | 'long-breaks';
+export type TaskCreationMode = 'simple' | 'full';
+
+export interface PomodoroSettings {
+  workDuration: number;
+  breakDuration: number;
+}
 
 export interface UserPreferencesProps {
   userId: string;
   layoutMode: LayoutMode;
   customColumns: CustomColumn[];
+  allowExtraCustomColumns: boolean;
   overloadBehavior: 'warn-only' | 'suggest-move' | 'no-warning';
   visualComplexity: VisualComplexity;
   informationDensity: InformationDensity;
   textSize: TextSize;
   notificationTiming: NotificationTiming;
+  taskCreationMode: TaskCreationMode;
+  pomodoroSettings: PomodoroSettings;
   updatedAt: Date;
 }
 
@@ -27,11 +36,14 @@ export interface UserPreferencesJSON {
   userId: string;
   layoutMode?: string;
   customColumns?: CustomColumn[];
+  allowExtraCustomColumns?: boolean;
   overloadBehavior?: string;
   visualComplexity?: string;
   informationDensity?: string;
   textSize?: string;
   notificationTiming?: string;
+  taskCreationMode?: string;
+  pomodoroSettings?: PomodoroSettings;
   updatedAt: string;
 }
 
@@ -43,11 +55,17 @@ export class UserPreferences {
       userId,
       layoutMode: 'list',
       customColumns: [],
+      allowExtraCustomColumns: false,
       overloadBehavior: 'suggest-move',
       visualComplexity: 'balanced',
+      taskCreationMode: 'simple',
       informationDensity: 'complete',
       textSize: 'medium',
       notificationTiming: 'only-when-asked',
+      pomodoroSettings: {
+        workDuration: 25,
+        breakDuration: 5,
+      },
       updatedAt: new Date(),
     });
   }
@@ -66,6 +84,10 @@ export class UserPreferences {
 
   get customColumns(): CustomColumn[] {
     return this.props.customColumns;
+  }
+
+  get allowExtraCustomColumns(): boolean {
+    return this.props.allowExtraCustomColumns;
   }
 
   get overloadBehavior(): 'warn-only' | 'suggest-move' | 'no-warning' {
@@ -88,15 +110,20 @@ export class UserPreferences {
     return this.props.notificationTiming;
   }
 
+  get taskCreationMode(): TaskCreationMode {
+    return this.props.taskCreationMode;
+  }
+
+  get pomodoroSettings(): PomodoroSettings {
+    return this.props.pomodoroSettings;
+  }
+
   get updatedAt(): Date {
     return this.props.updatedAt;
   }
 
   updateLayoutMode(mode: LayoutMode): void {
     this.props.layoutMode = mode;
-    if (mode !== 'custom') {
-      this.props.customColumns = [];
-    }
     this.props.updatedAt = new Date();
   }
 
@@ -176,30 +203,51 @@ export class UserPreferences {
     this.props.updatedAt = new Date();
   }
 
+  updateTaskCreationMode(mode: TaskCreationMode): void {
+    this.props.taskCreationMode = mode;
+    this.props.updatedAt = new Date();
+  }
+
+  updatePomodoroSettings(workDuration: number, breakDuration: number): void {
+    this.props.pomodoroSettings = { workDuration, breakDuration };
+    this.props.updatedAt = new Date();
+  }
+
+  updateAllowExtraCustomColumns(allow: boolean): void {
+    this.props.allowExtraCustomColumns = allow;
+    this.props.updatedAt = new Date();
+  }
+
   toJSON() {
     return {
       userId: this.props.userId,
       layoutMode: this.props.layoutMode,
       customColumns: this.props.customColumns,
+      allowExtraCustomColumns: this.props.allowExtraCustomColumns,
       overloadBehavior: this.props.overloadBehavior,
       visualComplexity: this.props.visualComplexity,
       informationDensity: this.props.informationDensity,
       textSize: this.props.textSize,
       notificationTiming: this.props.notificationTiming,
+      taskCreationMode: this.props.taskCreationMode,
+      pomodoroSettings: this.props.pomodoroSettings,
       updatedAt: this.props.updatedAt.toISOString(),
     };
   }
 
   static fromJSON(data: UserPreferencesJSON): UserPreferences {
-    return UserPreferences.fromPersistence({
+    return new UserPreferences({
       userId: data.userId,
       layoutMode: (data.layoutMode as LayoutMode) || 'list',
       customColumns: data.customColumns || [],
+      allowExtraCustomColumns: data.allowExtraCustomColumns ?? false,
       overloadBehavior: (data.overloadBehavior as 'warn-only' | 'suggest-move' | 'no-warning') || 'suggest-move',
       visualComplexity: (data.visualComplexity as VisualComplexity) || 'balanced',
       informationDensity: (data.informationDensity as InformationDensity) || 'complete',
       textSize: (data.textSize as TextSize) || 'medium',
       notificationTiming: (data.notificationTiming as NotificationTiming) || 'only-when-asked',
+      taskCreationMode: (data.taskCreationMode as TaskCreationMode) || 'simple',
+      pomodoroSettings: data.pomodoroSettings || { workDuration: 25, breakDuration: 5 },
       updatedAt: new Date(data.updatedAt),
     });
   }
