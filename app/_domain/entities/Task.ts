@@ -35,7 +35,7 @@ export interface TaskJSON {
   text: string;
   description?: string;
   category?: string;
-  state: string;
+  state: TaskState;
   createdAt: string;
   steps?: TaskStep[];
   timer?: TaskTimer;

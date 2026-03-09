@@ -1,7 +1,7 @@
-import { TaskRepository } from '@/app/_domain/repositories/TaskRepository';
+import { ITaskRepository } from '@/app/_domain/repositories/ITaskRepository';
 
 export class ResetTaskTimer {
-  constructor(private taskRepository: TaskRepository) {}
+  constructor(private taskRepository: ITaskRepository) {}
 
   async execute(taskId: string, workDuration?: number): Promise<void> {
     const task = await this.taskRepository.findById(taskId);
