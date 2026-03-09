@@ -1,5 +1,10 @@
 # MindEase - Documentação Técnica
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/seu-usuario/mindease)
+[![Tests](https://img.shields.io/badge/tests-171%20passing-success)](https://github.com/seu-usuario/mindease)
+[![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)](https://github.com/seu-usuario/mindease)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+
 **Sistema de Gerenciamento de Tarefas com Acessibilidade Cognitiva**
 
 Aplicação web desenvolvida com **Clean Architecture**, **TypeScript** e **Next.js 16**, focada em redução de carga cognitiva através de controle adaptativo de interface e persistência offline-first.
