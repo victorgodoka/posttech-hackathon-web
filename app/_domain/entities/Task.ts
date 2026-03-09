@@ -166,13 +166,23 @@ export class Task {
         startedAt: Date.now(),
       };
     } else {
+      // Se o timer estava pausado, apenas retomar com o tempo restante
+      // Se estava em idle, iniciar novo ciclo
+      if (this.props.timer.mode === 'idle') {
+        this.props.timer.mode = 'work';
+        this.props.timer.remainingSeconds = workDuration * 60;
+      }
       this.props.timer.isRunning = true;
       this.props.timer.startedAt = Date.now();
     }
   }
 
   pauseTimer(): void {
-    if (this.props.timer) {
+    if (this.props.timer && this.props.timer.startedAt) {
+      // Calcular quanto tempo passou desde que iniciou
+      const elapsed = Math.floor((Date.now() - this.props.timer.startedAt) / 1000);
+      // Atualizar remainingSeconds com o tempo que realmente resta
+      this.props.timer.remainingSeconds = Math.max(0, this.props.timer.remainingSeconds - elapsed);
       this.props.timer.isRunning = false;
       this.props.timer.startedAt = undefined;
     }

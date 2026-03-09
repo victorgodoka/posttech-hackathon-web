@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, FormEvent } from 'react';
 import { useCases } from '@/app/_infrastructure/di/container';
@@ -32,7 +32,7 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5 w-full">
       <div>
-        <label htmlFor="email" className="block text-sm font-light text-gray-600 mb-2">
+        <label htmlFor="email" className="block text-sm font-light text-dark-text-secondary mb-2">
           Email
         </label>
         <input
@@ -41,14 +41,14 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full px-4 py-3 border border-slate-600 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-500 transition-all font-light text-slate-100 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-400 bg-slate-700 dark:bg-slate-700"
+          className="w-full px-4 py-3 border border-dark-border-default dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-500 transition-all font-light text-dark-text-primary dark:text-dark-text-primary placeholder-slate-400 dark:placeholder-slate-400 bg-dark-surface-muted dark:bg-dark-surface-muted"
           disabled={loading}
           placeholder="seu@email.com"
         />
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-light text-gray-600 mb-2">
+        <label htmlFor="password" className="block text-sm font-light text-dark-text-secondary mb-2">
           Senha
         </label>
         <input
@@ -58,14 +58,14 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
           onChange={(e) => setPassword(e.target.value)}
           required
           minLength={6}
-          className="w-full px-4 py-3 border border-slate-600 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-500 transition-all font-light text-slate-100 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-400 bg-slate-700 dark:bg-slate-700"
+          className="w-full px-4 py-3 border border-dark-border-default dark:border-dark-border-default rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-500 transition-all font-light text-dark-text-primary dark:text-dark-text-primary placeholder-slate-400 dark:placeholder-slate-400 bg-dark-surface-muted dark:bg-dark-surface-muted"
           disabled={loading}
           placeholder="••••••"
         />
       </div>
 
       {message && (
-        <p className="text-sm text-slate-300 dark:text-slate-300 font-light text-center">
+        <p className="text-sm text-dark-text-primary dark:text-dark-text-primary font-light text-center">
           {message}
         </p>
       )}
@@ -79,7 +79,7 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
       </button>
 
       {onSwitchToRegister && (
-        <p className="text-center text-sm text-slate-400 dark:text-slate-400 font-light">
+        <p className="text-center text-sm text-dark-text-secondary font-light">
           Não tem conta?{' '}
           <button
             onClick={onSwitchToRegister}

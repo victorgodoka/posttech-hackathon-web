@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -20,7 +20,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100">
-      <div className="text-sm text-gray-400 font-light">Carregando...</div>
+      <div className="text-sm text-dark-text-secondary font-light">Carregando...</div>
     </div>
   );
 }

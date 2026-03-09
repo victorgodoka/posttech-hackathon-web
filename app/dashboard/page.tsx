@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -8,6 +8,7 @@ import { useAuth } from '@/app/_components/AuthProvider';
 import { useCognitive } from '@/app/_components/CognitiveProvider';
 import { useCognitiveLayout } from '@/app/_components/hooks/useCognitiveLayout';
 import { useToast } from '@/app/_components/ToastProvider';
+import { useBrowserNotification } from '@/app/_components/BrowserNotification';
 import { useRouter } from 'next/navigation';
 import { useCases } from '@/app/_infrastructure/di/container';
 import { Task, TaskState } from '@/app/_domain/entities/Task';
@@ -24,6 +25,7 @@ export default function DashboardPage() {
   const { preferences, addCustomColumn, updateCustomColumn, removeCustomColumn } = useCognitive();
   const layout = useCognitiveLayout();
   const { showSuccess, showError } = useToast();
+  const { showNotification, requestPermission, permission } = useBrowserNotification();
   const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showAddTask, setShowAddTask] = useState(false);
@@ -39,12 +41,18 @@ export default function DashboardPage() {
   useEffect(() => {
     loadTasks();
     
+    // Solicitar permissão de notificação ao carregar
+    if ('Notification' in window && Notification.permission === 'default') {
+      requestPermission();
+    }
+    
     // Verificar se é primeira visita para exibir onboarding
     const hasSeenOnboarding = localStorage.getItem('mindease-onboarding-completed');
     if (!hasSeenOnboarding) {
       setShowOnboarding(true);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Executar apenas uma vez ao montar
 
   async function loadTasks() {
     try {
@@ -162,19 +170,32 @@ export default function DashboardPage() {
 
   async function handleCompleteTimer(taskId: string) {
     try {
+      const task = tasks.find(t => t.id === taskId);
       const workDuration = preferences?.pomodoroSettings.workDuration || 25;
       const breakDuration = preferences?.pomodoroSettings.breakDuration || 5;
+      
       await useCases.completeTimerCycle.execute(taskId, workDuration, breakDuration);
       await loadTasks();
       
-      const task = tasks.find(t => t.id === taskId);
-      if (task?.timer.mode === 'break') {
-        showTransitionNotification('Ciclo completo! Hora de descansar.');
-      } else {
-        showTransitionNotification('Pausa terminada. Pronto para focar?');
-      }
+      // Determinar mensagem baseada no modo atual (antes de completar)
+      const isWorkMode = task?.timer.mode === 'work';
+      const message = isWorkMode 
+        ? '✓ Ciclo de foco completo! Hora de descansar.' 
+        : '✓ Pausa terminada. Pronto para focar?';
+      
+      // Mostrar notificação nativa do browser
+      showNotification('MindEase - Pomodoro', {
+        body: message,
+        icon: '/mindease.png',
+        tag: 'pomodoro-complete',
+        requireInteraction: true,
+      });
+      
+      // Também mostrar toast
+      showSuccess(message);
     } catch (error) {
       console.error('Erro ao completar ciclo:', error);
+      showError('Erro ao completar ciclo do timer');
     }
   }
 
@@ -224,15 +245,6 @@ export default function DashboardPage() {
     }
   }
 
-  function showTransitionNotification(message: string) {
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('MindEase', {
-        body: message,
-        icon: '/mindease.png',
-        tag: 'pomodoro',
-      });
-    }
-  }
 
   const [activeId, setActiveId] = useState<string | null>(null);
   
@@ -244,9 +256,15 @@ export default function DashboardPage() {
     })
   );
 
-  const activeTasks = tasks.filter(t => t.state === 'active');
+  // No modo list, mostrar todas as tarefas não concluídas juntas
+  const activeTasks = preferences?.layoutMode === 'list' 
+    ? tasks.filter(t => t.state !== 'done')
+    : tasks.filter(t => t.state === 'active');
   const pausedTasks = tasks.filter(t => t.state === 'paused');
   const doneTasks = tasks.filter(t => t.state === 'done');
+  
+  // Verificar se já existe uma tarefa em foco (com timer rodando)
+  const hasActiveTimer = tasks.some(t => t.timer?.isRunning);
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -291,8 +309,8 @@ export default function DashboardPage() {
 
   return (
     <ProtectedRoute>
-      <div className={`min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 dark:from-slate-900 dark:to-slate-800 ${layout.isFullScreen ? 'full-screen-mode' : ''}`}>
-        <header className="bg-slate-800/80 dark:bg-slate-800/80 backdrop-blur-sm border-b border-slate-700 dark:border-slate-700">
+      <div className={`min-h-screen bg-gradient-to-b from-dark-bg-primary to-dark-bg-secondary ${layout.isFullScreen ? 'full-screen-mode' : ''}`}>
+        <header className="bg-dark-bg-elevated/80 dark:bg-dark-bg-elevated/80 backdrop-blur-sm border-b border-dark-border-default">
           <div className="max-w-5xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
             <div className="flex items-center gap-3">
               <Image
@@ -303,22 +321,22 @@ export default function DashboardPage() {
                 className="rounded-lg"
               />
               <div>
-                <h1 className="text-lg font-medium text-teal-400 dark:text-teal-400">MindEase</h1>
+                <h1 className="text-lg font-medium text-dark-accent-teal-light dark:text-dark-accent-teal-light">MindEase</h1>
                 {isGuest && (
-                  <p className="text-xs text-slate-400 dark:text-slate-400 font-normal">Modo visitante</p>
+                  <p className="text-xs text-dark-text-secondary font-normal">Modo visitante</p>
                 )}
               </div>
             </div>
             <div className="flex items-center gap-4">
               {!isGuest && user && (
-                <span className="text-sm text-gray-600 font-light">Olá, {user.name}</span>
+                <span className="text-sm text-dark-text-secondary font-light">Olá, {user.name}</span>
               )}
               {isGuest && (
-                <span className="text-sm text-gray-400 font-light">Modo visitante</span>
+                <span className="text-sm text-dark-text-secondary font-light">Modo visitante</span>
               )}
               <button
                 onClick={() => router.push('/settings')}
-                className="px-4 py-2 text-sm text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 transition-colors font-light"
+                className="px-4 py-2 text-sm text-dark-text-secondary hover:text-dark-text-primary dark:text-dark-text-secondary dark:hover:text-dark-text-primary transition-colors font-light"
                 aria-label="Abrir configurações"
                 title="Configurações"
               >
@@ -329,7 +347,7 @@ export default function DashboardPage() {
               </button>
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 text-sm text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 border border-slate-600 dark:border-slate-600 rounded-lg hover:bg-slate-700/50 dark:hover:bg-slate-700/50 transition-colors font-light"
+                className="px-4 py-2 text-sm text-dark-text-secondary hover:text-dark-text-primary dark:text-dark-text-secondary dark:hover:text-dark-text-primary border border-dark-border-default dark:border-dark-border-default rounded-lg hover:bg-dark-bg-hover transition-colors font-light"
               >
                 Sair
               </button>
@@ -339,31 +357,31 @@ export default function DashboardPage() {
 
         <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
           <div className="mb-6">
-            <h2 className="text-2xl font-medium text-slate-100 dark:text-slate-100 mb-2">Board Cognitivo</h2>
-            <p className="text-base text-slate-400 dark:text-slate-400 font-normal">
+            <h2 className="text-2xl font-medium text-dark-text-primary dark:text-dark-text-primary mb-2">Board Cognitivo</h2>
+            <p className="text-base text-dark-text-secondary font-normal">
               Foque em uma coisa por vez, sem sobrecarga
             </p>
           </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-16">
-              <p className="text-slate-400 dark:text-slate-400 font-normal text-base">Carregando...</p>
+              <p className="text-dark-text-secondary font-normal text-base">Carregando...</p>
             </div>
           ) : (
             <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <div className="flex flex-col md:flex-row gap-4 items-stretch">
               {/* Coluna: A fazer (lista de tarefas pendentes) */}
               {layout.visibleColumns.includes('active') && (
-              <div className="flex-1 bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
+              <div className="flex-1 bg-dark-bg-elevated/60 dark:bg-dark-bg-elevated/60 backdrop-blur-sm rounded-xl border border-dark-border-default p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">
+                  <h3 className="text-lg font-medium text-dark-text-primary">
                     {preferences?.layoutMode === 'list' ? 'Lista' : 'A fazer'}
                   </h3>
                   {preferences?.layoutMode === 'list' && doneTasks.length > 0 && (
                     <button
                       onClick={() => setShowHistory(!showHistory)}
                       onKeyDown={(e) => e.key === 'Enter' && setShowHistory(!showHistory)}
-                      className="text-xs text-slate-500 hover:text-slate-300 transition-colors font-normal flex items-center gap-1"
+                      className="text-xs text-dark-text-muted hover:text-dark-text-primary transition-colors font-normal flex items-center gap-1"
                       aria-label={showHistory ? 'Fechar histórico' : 'Ver histórico de tarefas concluídas'}
                       aria-expanded={showHistory}
                       title="Ver histórico"
@@ -380,13 +398,13 @@ export default function DashboardPage() {
                 <DroppableColumn id="active" items={activeTasks.map(t => t.id)}>
                   {activeTasks.length === 0 && !showAddTask ? (
                     <div className="flex flex-col items-center justify-center py-12">
-                      <p className="text-slate-400 dark:text-slate-400 font-normal text-base text-center mb-4">
+                      <p className="text-dark-text-secondary font-normal text-base text-center mb-4">
                         Nada por aqui ainda
                       </p>
                       <button
                         onClick={() => setShowAddTask(true)}
                         onKeyDown={(e) => e.key === 'Enter' && setShowAddTask(true)}
-                        className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 font-normal transition-colors"
+                        className="flex items-center gap-2 text-sm text-dark-text-secondary hover:text-dark-text-primary dark:text-dark-text-secondary dark:hover:text-dark-text-primary font-normal transition-colors"
                         aria-label="Adicionar nova tarefa"
                       >
                         <Icon icon="mdi:plus-circle-outline" className="w-5 h-5" />
@@ -409,6 +427,7 @@ export default function DashboardPage() {
                           onResetTimer={handleResetTimer}
                           onCompleteTimer={handleCompleteTimer}
                           isPrimaryFocus={index === 0}
+                          hasActiveTimer={hasActiveTimer}
                         />
                       ))}
 
@@ -422,7 +441,7 @@ export default function DashboardPage() {
                         <button
                           onClick={() => setShowAddTask(true)}
                           onKeyDown={(e) => e.key === 'Enter' && setShowAddTask(true)}
-                          className="w-full p-3 border border-dashed border-slate-600 dark:border-slate-600 rounded-lg text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 hover:border-slate-500 dark:hover:border-slate-500 transition-colors font-normal text-sm flex items-center justify-center gap-2"
+                          className="w-full p-3 border border-dashed border-dark-border-default dark:border-dark-border-default rounded-lg text-dark-text-secondary hover:text-dark-text-primary dark:text-dark-text-secondary dark:hover:text-dark-text-primary hover:border-dark-border-emphasis transition-colors font-normal text-sm flex items-center justify-center gap-2"
                           aria-label="Adicionar mais uma tarefa"
                         >
                           <Icon icon="mdi:plus" className="w-4 h-4" />
@@ -438,21 +457,21 @@ export default function DashboardPage() {
               {/* Seta entre colunas */}
               {layout.visibleColumns.includes('active') && layout.visibleColumns.includes('paused') && (
                 <div className="hidden md:flex items-center justify-center">
-                  <Icon icon="mdi:arrow-right" className="w-8 h-8 text-slate-500" />
+                  <Icon icon="mdi:arrow-right" className="w-8 h-8 text-dark-text-muted" />
                 </div>
               )}
 
               {/* Coluna: Fazendo (tarefa em execução) */}
               {layout.visibleColumns.includes('paused') && (
-              <div className="flex-1 bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
+              <div className="flex-1 bg-dark-bg-elevated/60 dark:bg-dark-bg-elevated/60 backdrop-blur-sm rounded-xl border border-dark-border-default p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Fazendo</h3>
+                  <h3 className="text-lg font-medium text-dark-text-primary">Fazendo</h3>
                 </div>
 
                 <DroppableColumn id="paused" items={pausedTasks.map(t => t.id)}>
                   {pausedTasks.length === 0 ? (
                     <div className="flex items-center justify-center py-12">
-                      <p className="text-slate-400 dark:text-slate-400 font-normal text-base text-center">
+                      <p className="text-dark-text-secondary font-normal text-base text-center">
                         Nada aqui ainda
                       </p>
                     </div>
@@ -480,21 +499,21 @@ export default function DashboardPage() {
               {/* Seta entre colunas */}
               {layout.visibleColumns.includes('paused') && layout.visibleColumns.includes('done') && (
                 <div className="hidden md:flex items-center justify-center">
-                  <Icon icon="mdi:arrow-right" className="w-8 h-8 text-slate-500" />
+                  <Icon icon="mdi:arrow-right" className="w-8 h-8 text-dark-text-muted" />
                 </div>
               )}
 
               {/* Coluna: Concluído */}
               {layout.visibleColumns.includes('done') && preferences?.layoutMode !== 'custom' && (
-              <div className="flex-1 bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
+              <div className="flex-1 bg-dark-bg-elevated/60 dark:bg-dark-bg-elevated/60 backdrop-blur-sm rounded-xl border border-dark-border-default p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Concluído</h3>
+                  <h3 className="text-lg font-medium text-dark-text-primary">Concluído</h3>
                 </div>
 
                 <DroppableColumn id="done" items={doneTasks.map(t => t.id)}>
                   {doneTasks.length === 0 ? (
                     <div className="flex items-center justify-center py-12">
-                      <p className="text-slate-400 dark:text-slate-400 font-normal text-base text-center">
+                      <p className="text-dark-text-secondary font-normal text-base text-center">
                         Nada aqui ainda — e tudo bem.
                       </p>
                     </div>
@@ -525,10 +544,10 @@ export default function DashboardPage() {
                 if (unassignedTasks.length === 0) return null;
                 
                 return (
-                  <div className="flex-1 bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
+                  <div className="flex-1 bg-dark-bg-elevated/60 dark:bg-dark-bg-elevated/60 backdrop-blur-sm rounded-xl border border-dark-border-default p-4">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-medium text-slate-200 dark:text-slate-200">Sem Categoria</h3>
-                      <span className="text-xs text-slate-500 dark:text-slate-500">Arraste para organizar</span>
+                      <h3 className="text-lg font-medium text-dark-text-primary">Sem Categoria</h3>
+                      <span className="text-xs text-dark-text-muted dark:text-dark-text-muted">Arraste para organizar</span>
                     </div>
                     <DroppableColumn id="unassigned" items={unassignedTasks.map(t => t.id)}>
                       {unassignedTasks.map((task) => (
@@ -559,7 +578,7 @@ export default function DashboardPage() {
                   
                   return (
                     <React.Fragment key={column.id}>
-                    <div className="flex-1 bg-slate-800/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-xl border border-slate-700 dark:border-slate-700 p-4">
+                    <div className="flex-1 bg-dark-bg-elevated/60 dark:bg-dark-bg-elevated/60 backdrop-blur-sm rounded-xl border border-dark-border-default p-4">
                       <div className="flex items-center justify-between mb-4">
                         {editingColumnId === column.id ? (
                           <input
@@ -574,13 +593,13 @@ export default function DashboardPage() {
                               }
                             }}
                             onBlur={() => handleUpdateCustomColumn(column.id)}
-                            className="text-lg font-medium text-slate-200 bg-slate-700 px-2 py-1 rounded border border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            className="text-lg font-medium text-dark-text-primary bg-dark-surface-muted px-2 py-1 rounded border border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                             aria-label="Editar nome da coluna"
                             autoFocus
                           />
                         ) : (
                           <h3 
-                            className="text-lg font-medium text-slate-200 cursor-pointer hover:text-indigo-400 transition-colors"
+                            className="text-lg font-medium text-dark-text-primary cursor-pointer hover:text-indigo-400 transition-colors"
                             onClick={() => {
                               setEditingColumnId(column.id);
                               setEditingColumnName(column.name);
@@ -592,7 +611,7 @@ export default function DashboardPage() {
                         )}
                         <button
                           onClick={() => handleRemoveCustomColumn(column.id)}
-                          className="text-slate-500 hover:text-red-400 transition-colors"
+                          className="text-dark-text-muted hover:text-red-400 transition-colors"
                           aria-label={`Remover coluna ${column.name}`}
                           title="Remover coluna"
                         >
@@ -603,7 +622,7 @@ export default function DashboardPage() {
                       <DroppableColumn id={column.id} items={columnTasks.map(t => t.id)}>
                         {columnTasks.length === 0 && !(showAddTask && afterColumnId === column.id) ? (
                           <div className="flex flex-col items-center justify-center py-12">
-                            <p className="text-slate-400 dark:text-slate-400 font-normal text-base text-center mb-4">
+                            <p className="text-dark-text-secondary font-normal text-base text-center mb-4">
                               Nada por aqui ainda
                             </p>
                             <button
@@ -651,7 +670,7 @@ export default function DashboardPage() {
                                   setShowAddTask(true);
                                   setAfterColumnId(column.id);
                                 }}
-                                className="w-full p-3 border border-dashed border-slate-600 dark:border-slate-600 rounded-lg text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 hover:border-slate-500 dark:hover:border-slate-500 transition-colors font-normal text-sm flex items-center justify-center gap-2"
+                                className="w-full p-3 border border-dashed border-dark-border-default dark:border-dark-border-default rounded-lg text-dark-text-secondary hover:text-dark-text-primary dark:text-dark-text-secondary dark:hover:text-dark-text-primary hover:border-dark-border-emphasis transition-colors font-normal text-sm flex items-center justify-center gap-2"
                                 aria-label={`Adicionar tarefa em ${column.name}`}
                               >
                                 <Icon icon="mdi:plus" className="w-4 h-4" />
@@ -666,7 +685,7 @@ export default function DashboardPage() {
                     {/* Seta entre colunas customizadas */}
                     {index < array.length - 1 && (
                       <div className="hidden md:flex items-center justify-center">
-                        <Icon icon="mdi:arrow-right" className="w-8 h-8 text-slate-500" />
+                        <Icon icon="mdi:arrow-right" className="w-8 h-8 text-dark-text-muted" />
                       </div>
                     )}
                     </React.Fragment>
@@ -680,11 +699,11 @@ export default function DashboardPage() {
                 const canAddMore = currentCount < maxColumns;
                 
                 return canAddMore ? (
-                <div className="bg-slate-800/30 backdrop-blur-sm rounded-xl border-2 border-dashed border-slate-600 dark:border-slate-600 p-4 flex items-center justify-center min-h-[200px]">
+                <div className="bg-dark-bg-elevated/30 backdrop-blur-sm rounded-xl border-2 border-dashed border-dark-border-default dark:border-dark-border-default p-4 flex items-center justify-center min-h-[200px]">
                   {showAddColumn ? (
                     <div className="w-full space-y-3">
                       <div>
-                        <label htmlFor="columnName" className="block text-sm text-slate-400 mb-1">
+                        <label htmlFor="columnName" className="block text-sm text-dark-text-secondary mb-1">
                           Nome da coluna
                         </label>
                         <input
@@ -703,7 +722,7 @@ export default function DashboardPage() {
                             }
                           }}
                           placeholder="Ex: Em andamento"
-                          className="w-full px-3 py-2 text-base text-slate-100 dark:text-slate-100 font-normal border border-indigo-500 dark:border-indigo-500 rounded bg-slate-700 dark:bg-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:focus:ring-indigo-500"
+                          className="w-full px-3 py-2 text-base text-dark-text-primary dark:text-dark-text-primary font-normal border border-indigo-500 dark:border-indigo-500 rounded bg-dark-surface-muted dark:bg-dark-surface-muted focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:focus:ring-indigo-500"
                           aria-label="Digite o nome da nova coluna"
                           autoFocus
                         />
@@ -711,14 +730,14 @@ export default function DashboardPage() {
                       
                       {preferences?.customColumns && preferences.customColumns.length > 0 && (
                         <div>
-                          <label htmlFor="afterColumn" className="block text-sm text-slate-400 mb-1">
+                          <label htmlFor="afterColumn" className="block text-sm text-dark-text-secondary mb-1">
                             Vem após <span className="text-red-400">*</span>
                           </label>
                           <select
                             id="afterColumn"
                             value={afterColumnId}
                             onChange={(e) => setAfterColumnId(e.target.value)}
-                            className="w-full px-3 py-2 text-base text-slate-100 dark:text-slate-100 font-normal border border-slate-600 dark:border-slate-600 rounded bg-slate-700 dark:bg-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:focus:ring-indigo-500"
+                            className="w-full px-3 py-2 text-base text-dark-text-primary dark:text-dark-text-primary font-normal border border-dark-border-default dark:border-dark-border-default rounded bg-dark-surface-muted dark:bg-dark-surface-muted focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:focus:ring-indigo-500"
                             aria-label="Selecione após qual coluna esta deve aparecer"
                             required
                           >
@@ -731,7 +750,7 @@ export default function DashboardPage() {
                                 </option>
                               ))}
                           </select>
-                          <p className="text-xs text-slate-500 mt-1">
+                          <p className="text-xs text-dark-text-muted mt-1">
                             A nova coluna aparecerá logo após a coluna selecionada
                           </p>
                         </div>
@@ -742,7 +761,7 @@ export default function DashboardPage() {
                           onClick={handleAddCustomColumn}
                           onKeyDown={(e) => e.key === 'Enter' && handleAddCustomColumn()}
                           disabled={preferences?.customColumns.length > 0 && !afterColumnId}
-                          className="flex items-center gap-1.5 px-3 py-1 text-sm bg-indigo-500 hover:bg-indigo-600 disabled:bg-slate-600 disabled:cursor-not-allowed text-white rounded transition-colors font-normal"
+                          className="flex items-center gap-1.5 px-3 py-1 text-sm bg-indigo-500 hover:bg-indigo-600 disabled:bg-dark-surface-subtle disabled:cursor-not-allowed text-white rounded transition-colors font-normal"
                           aria-label="Confirmar e adicionar coluna"
                         >
                           <Icon icon="mdi:check" className="w-4 h-4" />
@@ -761,7 +780,7 @@ export default function DashboardPage() {
                               setAfterColumnId('');
                             }
                           }}
-                          className="flex items-center gap-1.5 px-3 py-1 text-sm text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 transition-colors font-normal"
+                          className="flex items-center gap-1.5 px-3 py-1 text-sm text-dark-text-secondary hover:text-dark-text-primary dark:text-dark-text-secondary dark:hover:text-dark-text-primary transition-colors font-normal"
                           aria-label="Cancelar adição de coluna"
                         >
                           <Icon icon="mdi:close" className="w-4 h-4" />
@@ -773,7 +792,7 @@ export default function DashboardPage() {
                     <button
                       onClick={() => setShowAddColumn(true)}
                       onKeyDown={(e) => e.key === 'Enter' && setShowAddColumn(true)}
-                      className="flex items-center gap-2 text-slate-500 hover:text-slate-300 transition-colors"
+                      className="flex items-center gap-2 text-dark-text-muted hover:text-dark-text-primary transition-colors"
                       aria-label="Adicionar nova coluna personalizada"
                     >
                       <Icon icon="mdi:view-column-outline" className="w-12 h-12" />
@@ -787,12 +806,12 @@ export default function DashboardPage() {
 
             {/* Modal de Histórico - Modo Lista */}
             {preferences?.layoutMode === 'list' && showHistory && doneTasks.length > 0 && (
-              <div className="mt-6 bg-slate-800/40 backdrop-blur-sm rounded-xl border border-slate-700/50 p-4">
+              <div className="mt-6 bg-dark-bg-elevated/40 backdrop-blur-sm rounded-xl border border-dark-border-default/50 p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-medium text-slate-200">Histórico de tarefas concluídas</h3>
+                  <h3 className="text-base font-medium text-dark-text-primary">Histórico de tarefas concluídas</h3>
                   <button
                     onClick={() => setShowHistory(false)}
-                    className="text-slate-400 hover:text-slate-200 transition-colors"
+                    className="text-dark-text-secondary hover:text-dark-text-primary transition-colors"
                     aria-label="Fechar histórico"
                   >
                     <Icon icon="mdi:close" className="w-5 h-5" />
@@ -800,8 +819,8 @@ export default function DashboardPage() {
                 </div>
                 <div className="space-y-2">
                   {doneTasks.map((task) => (
-                    <div key={task.id} className="p-3 bg-slate-700/30 rounded-lg border border-slate-600/30">
-                      <p className="text-sm text-slate-300 line-through">{task.text}</p>
+                    <div key={task.id} className="p-3 bg-dark-surface-muted/30 rounded-lg border border-dark-border-default/30">
+                      <p className="text-sm text-dark-text-primary line-through">{task.text}</p>
                       <div className="flex gap-2 mt-2">
                         <button
                           onClick={() => handleUpdateTaskState(task.id, 'active')}
@@ -813,7 +832,7 @@ export default function DashboardPage() {
                         </button>
                         <button
                           onClick={() => handleDeleteTask(task.id)}
-                          className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300 transition-colors ml-auto"
+                          className="flex items-center gap-1 text-xs text-dark-text-muted hover:text-dark-text-primary transition-colors ml-auto"
                           aria-label={`Remover tarefa: ${task.text}`}
                         >
                           <Icon icon="mdi:delete-outline" className="w-3.5 h-3.5" />
@@ -844,8 +863,8 @@ export default function DashboardPage() {
           )}
 
           {isGuest && tasks.length > 0 && (
-            <div className="mt-8 p-4 bg-indigo-900/30 dark:bg-indigo-900/30 border border-indigo-700 dark:border-indigo-700 rounded-lg">
-              <p className="text-base text-indigo-300 dark:text-indigo-300 font-normal text-center">
+            <div className="mt-8 p-4 bg-dark-accent-blue/30 border border-dark-accent-blue rounded-lg">
+              <p className="text-base text-dark-accent-blue-light font-normal text-center">
                 Se quiser, você pode{' '}
                 <button
                   onClick={() => router.push('/welcome')}

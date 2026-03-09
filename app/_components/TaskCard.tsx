@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
@@ -21,6 +21,7 @@ interface TaskCardProps {
   onResetTimer?: (taskId: string) => void;
   onCompleteTimer?: (taskId: string) => void;
   isPrimaryFocus?: boolean;
+  hasActiveTimer?: boolean;
 }
 
 export function TaskCard({
@@ -35,6 +36,7 @@ export function TaskCard({
   onResetTimer,
   onCompleteTimer,
   isPrimaryFocus = true,
+  hasActiveTimer = false,
 }: TaskCardProps) {
   const layout = useCognitiveLayout();
   const [showSteps, setShowSteps] = useState(false);
@@ -56,9 +58,9 @@ export function TaskCard({
   // Cores baseadas no estado (dark mode)
   const stateColors = {
     active: {
-      bg: 'bg-slate-800/40 dark:bg-slate-800/40',
-      border: 'border-slate-700/50 dark:border-slate-700/50',
-      hoverBorder: 'hover:border-slate-600 dark:hover:border-slate-600',
+      bg: 'bg-dark-bg-elevated/40 dark:bg-dark-bg-elevated/40',
+      border: 'border-dark-border-default/50',
+      hoverBorder: 'hover:border-dark-border-emphasis',
     },
     paused: {
       bg: 'bg-indigo-950/40 dark:bg-indigo-950/40',
@@ -83,7 +85,7 @@ export function TaskCard({
         <Icon icon={categoryConfig.icon} className={`w-5 h-5 ${categoryConfig.color} flex-shrink-0 mt-0.5`} />
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <p className={`text-base text-slate-200 dark:text-slate-200 font-normal flex-1 ${task.state === 'done' ? 'line-through text-slate-400 dark:text-slate-400' : ''}`}>
+            <p className={`text-base text-dark-text-primary font-normal flex-1 ${task.state === 'done' ? 'line-through text-dark-text-secondary' : ''}`}>
               {task.text}
             </p>
             {task.state === 'paused' && task.timer?.isRunning && (
@@ -94,7 +96,7 @@ export function TaskCard({
             )}
           </div>
           {task.description && (
-            <p className="text-sm text-slate-400 dark:text-slate-400 font-normal mt-1">
+            <p className="text-sm text-dark-text-secondary font-normal mt-1">
               {task.description}
             </p>
           )}
@@ -102,7 +104,7 @@ export function TaskCard({
       </div>
 
       {/* Timer Pomodoro - apenas se tarefa usar Pomodoro e se densidade permitir */}
-      {layout.showTimer && task.usePomodoro && (task.state === 'active' || task.state === 'paused') && onStartTimer && onPauseTimer && onResetTimer && onCompleteTimer && (
+      {layout.showTimer && task.usePomodoro && (
         <PomodoroTimer
           taskId={task.id}
           timer={task.timer}
@@ -110,6 +112,7 @@ export function TaskCard({
           onPause={onPauseTimer}
           onReset={onResetTimer}
           onComplete={onCompleteTimer}
+          hasActiveTimer={hasActiveTimer && !task.timer?.isRunning}
         />
       )}
 
@@ -117,9 +120,11 @@ export function TaskCard({
       {!task.usePomodoro && task.state === 'active' && (
         <div className="mb-3">
           <button
-            onClick={() => onUpdateState(task.id, 'paused')}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition-colors font-normal"
+            onClick={() => !hasActiveTimer && onUpdateState(task.id, 'paused')}
+            disabled={hasActiveTimer}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 disabled:bg-dark-surface-muted disabled:text-dark-text-muted disabled:cursor-not-allowed text-white rounded-lg transition-colors font-normal"
             aria-label="Iniciar tarefa"
+            title={hasActiveTimer ? 'Outra tarefa já está em foco' : ''}
           >
             <Icon icon="mdi:play" className="w-5 h-5" />
             Iniciar
@@ -129,8 +134,8 @@ export function TaskCard({
 
       {/* Estado de aguardando - tarefas secundárias em foco */}
       {task.state === 'active' && !isPrimaryFocus && (
-        <div className="mb-3 p-2 bg-slate-800/30 dark:bg-slate-800/30 rounded border border-slate-600/30 dark:border-slate-600/30">
-          <p className="text-xs text-slate-400 dark:text-slate-400 font-normal text-center">
+        <div className="mb-3 p-2 bg-dark-bg-elevated/30 dark:bg-dark-bg-elevated/30 rounded border border-dark-border-default/30">
+          <p className="text-xs text-dark-text-secondary font-normal text-center">
             Aguardando
           </p>
         </div>
@@ -141,7 +146,7 @@ export function TaskCard({
         <div className="mb-3">
           <button
             onClick={() => setShowSteps(!showSteps)}
-            className="flex items-center gap-2 text-sm text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 font-normal"
+            className="flex items-center gap-2 text-sm text-dark-text-secondary hover:text-dark-text-primary dark:text-dark-text-secondary dark:hover:text-dark-text-primary font-normal"
           >
             <svg className={`w-3 h-3 transition-transform ${showSteps ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -161,7 +166,7 @@ export function TaskCard({
                 className={`mt-0.5 w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-colors ${
                   step.completed
                     ? 'bg-indigo-500 border-indigo-500 dark:bg-indigo-500 dark:border-indigo-500'
-                    : 'border-slate-500 hover:border-indigo-400 dark:border-slate-500 dark:hover:border-indigo-400'
+                    : 'border-dark-border-emphasis hover:border-indigo-400 dark:border-dark-border-emphasis dark:hover:border-indigo-400'
                 }`}
               >
                 {step.completed && (
@@ -170,12 +175,12 @@ export function TaskCard({
                   </svg>
                 )}
               </button>
-              <span className={`text-sm flex-1 ${step.completed ? 'line-through text-slate-400 dark:text-slate-400' : 'text-slate-300 dark:text-slate-300'} font-normal`}>
+              <span className={`text-sm flex-1 ${step.completed ? 'line-through text-dark-text-secondary' : 'text-dark-text-primary dark:text-dark-text-primary'} font-normal`}>
                 {step.text}
               </span>
               <button
                 onClick={() => onRemoveStep(task.id, step.id)}
-                className="opacity-0 group-hover/step:opacity-100 text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 transition-opacity"
+                className="opacity-0 group-hover/step:opacity-100 text-dark-text-secondary hover:text-dark-text-primary dark:text-dark-text-secondary dark:hover:text-dark-text-primary transition-opacity"
                 title="Remover passo"
               >
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -196,7 +201,7 @@ export function TaskCard({
             onChange={(e) => setStepInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAddStep()}
             placeholder="Próximo passo..."
-            className="w-full px-2 py-1 text-sm text-slate-100 dark:text-slate-100 font-normal border border-slate-600 dark:border-slate-600 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:focus:ring-indigo-500 bg-slate-600 dark:bg-slate-600"
+            className="w-full px-2 py-1 text-sm text-dark-text-primary dark:text-dark-text-primary font-normal border border-dark-border-default dark:border-dark-border-default rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:focus:ring-indigo-500 bg-dark-surface-subtle dark:bg-dark-surface-subtle"
             autoFocus
           />
           <div className="flex gap-2 mt-1">
@@ -211,7 +216,7 @@ export function TaskCard({
                 setShowAddStep(false);
                 setStepInput('');
               }}
-              className="px-2 py-0.5 text-sm text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 transition-colors font-normal"
+              className="px-2 py-0.5 text-sm text-dark-text-secondary hover:text-dark-text-primary dark:text-dark-text-secondary dark:hover:text-dark-text-primary transition-colors font-normal"
             >
               Cancelar
             </button>
@@ -223,7 +228,7 @@ export function TaskCard({
       {layout.showSteps && showSteps && !showAddStep && (
         <button
           onClick={() => setShowAddStep(true)}
-          className="ml-2 mb-3 text-sm text-slate-400 hover:text-slate-200 dark:text-slate-400 dark:hover:text-slate-200 font-normal"
+          className="ml-2 mb-3 text-sm text-dark-text-secondary hover:text-dark-text-primary dark:text-dark-text-secondary dark:hover:text-dark-text-primary font-normal"
         >
           + Adicionar passo
         </button>
@@ -246,7 +251,7 @@ export function TaskCard({
       )}
 
       {/* Ações da tarefa - adaptadas pela complexidade visual */}
-      <div className="flex items-center gap-3 pt-2 mt-2 border-t border-slate-600/30 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-3 pt-2 mt-2 border-t border-dark-border-default/30 opacity-0 group-hover:opacity-100 transition-opacity">
         {task.state === 'active' && (
           <>
             {layout.maxActions >= 1 && (
@@ -291,7 +296,7 @@ export function TaskCard({
         {layout.showSecondaryActions && (
           <button
             onClick={() => onDelete(task.id)}
-            className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-red-400 dark:text-slate-500 dark:hover:text-red-400 font-normal ml-auto transition-colors"
+            className="flex items-center gap-1.5 text-sm text-dark-text-muted hover:text-red-400 dark:text-dark-text-muted dark:hover:text-red-400 font-normal ml-auto transition-colors"
             title="Remover tarefa"
             aria-label="Remover tarefa"
           >

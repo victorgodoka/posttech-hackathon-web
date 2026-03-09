@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, FormEvent } from 'react';
 import { useCases } from '@/app/_infrastructure/di/container';
@@ -34,7 +34,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
   return (
     <form onSubmit={handleSubmit} className="space-y-5 w-full">
       <div>
-        <label htmlFor="name" className="block text-sm font-light text-gray-600 mb-2">
+        <label htmlFor="name" className="block text-sm font-light text-dark-text-secondary mb-2">
           Nome
         </label>
         <input
@@ -50,7 +50,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-light text-gray-600 mb-2">
+        <label htmlFor="email" className="block text-sm font-light text-dark-text-secondary mb-2">
           Email
         </label>
         <input
@@ -66,7 +66,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-light text-gray-600 mb-2">
+        <label htmlFor="password" className="block text-sm font-light text-dark-text-secondary mb-2">
           Senha
         </label>
         <input
@@ -83,7 +83,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
       </div>
 
       {message && (
-        <p className="text-sm text-slate-300 dark:text-slate-300 font-light text-center">
+        <p className="text-sm text-dark-text-primary dark:text-dark-text-primary font-light text-center">
           {message}
         </p>
       )}
@@ -96,7 +96,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
         {loading ? 'Criando conta...' : 'Criar conta'}
       </button>
 
-      <p className="text-center text-sm text-slate-400 dark:text-slate-400 font-light">
+      <p className="text-center text-sm text-dark-text-secondary font-light">
         Já tem conta?{' '}
         <button
           onClick={onSwitchToLogin}

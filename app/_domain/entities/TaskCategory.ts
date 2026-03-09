@@ -1,4 +1,4 @@
-export type TaskCategory = 
+﻿export type TaskCategory = 
   | 'personal'
   | 'health'
   | 'home'
@@ -35,10 +35,10 @@ export const TASK_CATEGORIES: CategoryConfig[] = [
   // Trabalho
   { id: 'work', label: 'Trabalho', icon: 'mdi:briefcase', color: 'text-amber-400' },
   { id: 'meeting', label: 'Reunião', icon: 'mdi:account-group', color: 'text-orange-400' },
-  { id: 'project', label: 'Projeto', icon: 'mdi:folder-multiple', color: 'text-teal-400' },
+  { id: 'project', label: 'Projeto', icon: 'mdi:folder-multiple', color: 'text-dark-accent-teal-light' },
   
   // Outros
-  { id: 'other', label: 'Outros', icon: 'mdi:dots-horizontal', color: 'text-slate-400' },
+  { id: 'other', label: 'Outros', icon: 'mdi:dots-horizontal', color: 'text-dark-text-secondary' },
 ];
 
 export function getCategoryConfig(category: TaskCategory): CategoryConfig {

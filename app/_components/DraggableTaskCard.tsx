@@ -17,6 +17,7 @@ interface DraggableTaskCardProps {
   onResetTimer?: (taskId: string) => void;
   onCompleteTimer?: (taskId: string) => void;
   isPrimaryFocus?: boolean;
+  hasActiveTimer?: boolean;
 }
 
 export function DraggableTaskCard({
@@ -31,6 +32,7 @@ export function DraggableTaskCard({
   onResetTimer,
   onCompleteTimer,
   isPrimaryFocus = true,
+  hasActiveTimer = false,
 }: DraggableTaskCardProps) {
   const {
     attributes,
@@ -62,6 +64,7 @@ export function DraggableTaskCard({
         onResetTimer={onResetTimer}
         onCompleteTimer={onCompleteTimer}
         isPrimaryFocus={isPrimaryFocus}
+        hasActiveTimer={hasActiveTimer}
       />
     </div>
   );

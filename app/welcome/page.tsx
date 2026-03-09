@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -30,7 +30,7 @@ export default function WelcomePage() {
 
   if (!showChoice) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-900 to-slate-800 dark:from-slate-900 dark:to-slate-800">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-dark-bg-primary to-dark-bg-secondary">
         <div className="text-center">
           <Image
             src="/mindease.png"
@@ -40,7 +40,7 @@ export default function WelcomePage() {
             className="mx-auto mb-6"
             priority
           />
-          <h1 className="text-2xl font-light text-teal-400 dark:text-teal-400">
+          <h1 className="text-2xl font-light text-dark-accent-teal-light dark:text-dark-accent-teal-light">
             MindEase
           </h1>
         </div>
@@ -49,7 +49,7 @@ export default function WelcomePage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-900 to-slate-800 dark:from-slate-900 dark:to-slate-800 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-dark-bg-primary to-dark-bg-secondary px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-12">
           <Image
@@ -60,10 +60,10 @@ export default function WelcomePage() {
             className="mx-auto mb-4"
             priority
           />
-          <h2 className="text-2xl font-light text-teal-400 dark:text-teal-400 mb-8">
+          <h2 className="text-2xl font-light text-dark-accent-teal-light dark:text-dark-accent-teal-light mb-8">
             MindEase
           </h2>
-          <h1 className="text-2xl font-light text-slate-100 dark:text-slate-100 mb-3">
+          <h1 className="text-2xl font-light text-dark-text-primary dark:text-dark-text-primary mb-3">
             Vamos começar com calma.
           </h1>
         </div>
@@ -75,22 +75,22 @@ export default function WelcomePage() {
           >
             Continuar como convidado
           </button>
-          <p className="text-xs text-center text-slate-400 dark:text-slate-400 font-light px-4">
+          <p className="text-xs text-center text-dark-text-secondary font-light px-4">
             Modo visitante • Sem necessidade de criar conta
           </p>
 
           <div className="relative py-4">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-700 dark:border-slate-700"></div>
+              <div className="w-full border-t border-dark-border-default"></div>
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="bg-gradient-to-b from-slate-900 to-slate-800 dark:from-slate-900 dark:to-slate-800 px-3 text-slate-500 dark:text-slate-500 font-light">ou</span>
+              <span className="bg-gradient-to-b from-dark-bg-primary to-dark-bg-secondary px-3 text-dark-text-muted font-light">ou</span>
             </div>
           </div>
 
           <button
             onClick={() => router.push('/login')}
-            className="w-full bg-slate-800 hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-300 dark:text-slate-300 py-3 px-6 rounded-lg border border-slate-700 dark:border-slate-700 transition-colors duration-200 text-sm font-light"
+            className="w-full bg-dark-bg-elevated hover:bg-dark-surface-muted dark:bg-dark-bg-elevated dark:hover:bg-dark-surface-muted text-dark-text-primary dark:text-dark-text-primary py-3 px-6 rounded-lg border border-dark-border-default transition-colors duration-200 text-sm font-light"
           >
             Entrar com e-mail
           </button>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { Icon } from '@iconify/react';
@@ -52,12 +52,12 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/95 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-dark-bg-primary/95 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="onboarding-title"
     >
-      <div className="max-w-md w-full mx-4 bg-slate-800 rounded-xl border border-slate-700 p-8 shadow-2xl">
+      <div className="max-w-md w-full mx-4 bg-dark-bg-elevated rounded-xl border border-dark-border-default p-8 shadow-2xl">
         <div className="flex flex-col items-center text-center">
           <Icon 
             icon={steps[currentStep].icon} 
@@ -66,12 +66,12 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           
           <h2 
             id="onboarding-title"
-            className="text-2xl font-medium text-slate-100 mb-3"
+            className="text-2xl font-medium text-dark-text-primary mb-3"
           >
             {steps[currentStep].title}
           </h2>
           
-          <p className="text-base text-slate-300 mb-6">
+          <p className="text-base text-dark-text-primary mb-6">
             {steps[currentStep].description}
           </p>
 
@@ -84,7 +84,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     ? 'w-8 bg-indigo-500'
                     : index < currentStep
                     ? 'w-1.5 bg-indigo-600/50'
-                    : 'w-1.5 bg-slate-600'
+                    : 'w-1.5 bg-dark-surface-subtle'
                 }`}
                 aria-label={`Passo ${index + 1} de ${steps.length}${index === currentStep ? ' (atual)' : ''}`}
               />
@@ -95,7 +95,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             <button
               onClick={handleSkip}
               onKeyDown={handleKeyDown}
-              className="flex-1 px-4 py-2 text-sm text-slate-400 hover:text-slate-200 transition-colors font-normal"
+              className="flex-1 px-4 py-2 text-sm text-dark-text-secondary hover:text-dark-text-primary transition-colors font-normal"
               aria-label="Pular tutorial"
             >
               Pular
@@ -110,7 +110,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             </button>
           </div>
 
-          <p className="text-xs text-slate-500 mt-4">
+          <p className="text-xs text-dark-text-muted mt-4">
             Passo {currentStep + 1} de {steps.length}
           </p>
         </div>

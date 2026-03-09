@@ -1,32 +1,77 @@
 @import "tailwindcss";
 
-@layer base {
-  :root {
-    --base-font-size: 17px;
-    --animation-duration: 300ms;
-  }
+@theme {
+  --base-font-size: 17px;
+  --animation-duration: 300ms;
 
-  html {
-    font-size: var(--base-font-size);
-  }
-  
-  body {
-    font-weight: 400;
-  }
-  
-  h1, h2, h3, h4, h5, h6 {
-    font-weight: 500;
-  }
+  /* Design Tokens - MindEase Color System */
+  /* Backgrounds */
+  --color-dark-bg-primary: #171717;
+  --color-dark-bg-secondary: #0F324A;
+  --color-dark-bg-tertiary: #012326;
+  --color-dark-bg-elevated: #1F1F1F;
+  --color-dark-bg-hover: #252525;
 
-  /* Respeitar preferência de redução de movimento */
-  @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-    }
+  /* Surfaces */
+  --color-dark-surface-base: #1F1F1F;
+  --color-dark-surface-muted: #2A2A2A;
+  --color-dark-surface-subtle: #333333;
+
+  /* Text */
+  --color-dark-text-primary: #ECEAEC;
+  --color-dark-text-secondary: #92A9AC;
+  --color-dark-text-tertiary: #9EB8D0;
+  --color-dark-text-muted: #6B7280;
+  --color-dark-text-inverse: #171717;
+
+  /* Borders */
+  --color-dark-border-default: #2A2A2A;
+  --color-dark-border-subtle: #1F1F1F;
+  --color-dark-border-emphasis: #3F3F3F;
+  --color-dark-border-focus: #92A9AC;
+
+  /* Accent Colors */
+  --color-dark-accent-blue: #0F324A;
+  --color-dark-accent-blue-light: #9EB8D0;
+  --color-dark-accent-teal: #012326;
+  --color-dark-accent-teal-light: #92A9AC;
+
+  /* Status Colors */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+}
+
+html {
+  font-size: var(--base-font-size);
+}
+
+body {
+  font-weight: 400;
+  background-color: var(--color-dark-bg-primary);
+  color: var(--color-dark-text-primary);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 500;
+  color: var(--color-dark-text-primary);
+}
+
+/* Respeitar preferência de redução de movimento */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
@@ -36,12 +81,13 @@
       opacity: 0;
       transform: translateY(-4px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
-  
+
   .animate-fade-slide-in {
     animation: fadeSlideIn 0.3s ease-out;
   }
