@@ -10,6 +10,11 @@ jest.mock('./app/_infrastructure/persistence/firebase/firebaseConfig', () => ({
 // Mock IndexedDB para testes
 require('fake-indexeddb/auto');
 
+// Polyfill para structuredClone (Node < 17)
+if (typeof global.structuredClone === 'undefined') {
+  global.structuredClone = (obj) => JSON.parse(JSON.stringify(obj));
+}
+
 // Mock environment variables para testes
 process.env.NEXT_PUBLIC_USE_FIREBASE = 'false';
 process.env.NEXT_PUBLIC_FIREBASE_API_KEY = 'test-api-key';

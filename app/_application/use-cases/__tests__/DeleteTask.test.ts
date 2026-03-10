@@ -17,6 +17,8 @@ describe('DeleteTask Use Case', () => {
 
   it('should delete task by id', async () => {
     const taskId = 'task-123';
+    const mockTask = { id: taskId, text: 'Test task' } as any;
+    mockRepository.findById.mockResolvedValue(mockTask);
 
     await deleteTask.execute(taskId);
 
@@ -25,6 +27,8 @@ describe('DeleteTask Use Case', () => {
   });
 
   it('should propagate repository errors', async () => {
+    const mockTask = { id: 'task-123', text: 'Test task' } as any;
+    mockRepository.findById.mockResolvedValue(mockTask);
     mockRepository.delete.mockRejectedValue(new Error('Database error'));
 
     await expect(

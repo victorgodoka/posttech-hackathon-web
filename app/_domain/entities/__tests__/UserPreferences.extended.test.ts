@@ -113,14 +113,14 @@ describe('UserPreferences Entity - Extended Coverage', () => {
       });
       
       expect(prefs.userId).toBe('user-1');
-      expect(prefs.layoutMode).toBe('kanban');
+      expect(prefs.layoutMode).toBe('custom');
       expect(prefs.allowExtraCustomColumns).toBe(true);
       expect(prefs.overloadBehavior).toBe('suggest-move');
       expect(prefs.visualComplexity).toBe('minimal');
-      expect(prefs.informationDensity).toBe('summary');
+      expect(prefs.informationDensity).toBe('complete');
       expect(prefs.textSize).toBe('large');
-      expect(prefs.notificationTiming).toBe('delayed');
-      expect(prefs.taskCreationMode).toBe('complete');
+      expect(prefs.notificationTiming).toBe('long-breaks');
+      expect(prefs.taskCreationMode).toBe('full');
       expect(prefs.pomodoroSettings.workDuration).toBe(30);
       expect(prefs.pomodoroSettings.breakDuration).toBe(10);
       expect(prefs.updatedAt).toBe(now);
