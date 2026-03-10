@@ -103,7 +103,7 @@ describe('Task Entity', () => {
       const task = Task.create('Test task');
 
       task.startTimer();
-      expect(task.timer.mode).toBe('idle'); // Timer já existe em modo idle
+      expect(task.timer.mode).toBe('work'); // Timer inicia em modo work
       expect(task.timer.isRunning).toBe(true);
       expect(task.timer.startedAt).toBeDefined();
     });
