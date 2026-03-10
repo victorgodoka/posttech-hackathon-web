@@ -12,7 +12,14 @@ export default function WelcomePage() {
   const [showChoice, setShowChoice] = useState(false);
   const [selectedMode, setSelectedMode] = useState<StartMode | null>(null);
   const router = useRouter();
-  const { refresh } = useAuth();
+  const { refresh, isAuthenticated, loading, user } = useAuth();
+
+  // Redirecionar para dashboard se já estiver autenticado
+  useEffect(() => {
+    if (!loading && isAuthenticated && user) {
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated, loading, user, router]);
 
   useEffect(() => {
     const timer = setTimeout(() => {

@@ -12,6 +12,21 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
+// Validar se as variáveis foram carregadas
+if (typeof window !== 'undefined') {
+  console.log('🔥 Firebase Config:', {
+    apiKey: firebaseConfig.apiKey ? '✅ Definida' : '❌ Faltando',
+    authDomain: firebaseConfig.authDomain ? '✅ Definida' : '❌ Faltando',
+    projectId: firebaseConfig.projectId ? '✅ Definida' : '❌ Faltando',
+    appId: firebaseConfig.appId ? '✅ Definida' : '❌ Faltando',
+  });
+  
+  if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+    console.error('❌ ERRO: Variáveis de ambiente do Firebase não foram carregadas!');
+    console.error('Certifique-se de que o arquivo .env.local existe e o servidor foi reiniciado.');
+  }
+}
+
 let app: FirebaseApp;
 let db: Firestore;
 let auth: Auth;

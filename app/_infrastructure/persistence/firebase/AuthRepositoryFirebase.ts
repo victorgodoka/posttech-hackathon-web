@@ -2,6 +2,8 @@ import { IAuthRepository } from '@/app/_domain/repositories/IAuthRepository';
 import { 
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
   User as FirebaseUser
@@ -16,6 +18,29 @@ export class AuthRepositoryFirebase implements IAuthRepository {
     } catch (error: any) {
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
         throw new Error('Invalid credentials');
+      }
+      throw error;
+    }
+  }
+
+  async loginWithGoogle(): Promise<{ userId: string; email: string; name: string; isNewUser: boolean }> {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      return {
+        userId: user.uid,
+        email: user.email || '',
+        name: user.displayName || '',
+        isNewUser: result.user.metadata.creationTime === result.user.metadata.lastSignInTime,
+      };
+    } catch (error: any) {
+      if (error.code === 'auth/popup-closed-by-user') {
+        throw new Error('Login cancelado');
+      }
+      if (error.code === 'auth/popup-blocked') {
+        throw new Error('Pop-up bloqueado pelo navegador');
       }
       throw error;
     }

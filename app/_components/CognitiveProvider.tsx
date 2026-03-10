@@ -32,6 +32,13 @@ export function CognitiveProvider({ children }: { children: ReactNode }) {
 
   async function loadPreferences() {
     try {
+      // Se estiver usando Firebase e não estiver autenticado, não tenta carregar
+      const useFirebase = process.env.NEXT_PUBLIC_USE_FIREBASE === 'true';
+      if (useFirebase && !isAuthenticated) {
+        setLoading(false);
+        return;
+      }
+      
       const userId = user?.id || 'guest-user';
       const prefs = await useCases.getUserPreferences.execute(userId);
       setPreferences(prefs);

@@ -4,6 +4,8 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User } from '@/app/_domain/entities/User';
 import { useCases } from '@/app/_infrastructure/di/container';
 import { getDB } from '@/app/_infrastructure/persistence/idb/db';
+import { auth } from '@/app/_infrastructure/persistence/firebase/firebaseConfig';
+import { onAuthStateChanged } from 'firebase/auth';
 
 interface AuthContextValue {
   user: User | null;
@@ -16,6 +18,7 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 const GUEST_USER_ID = 'guest-user';
+const USE_FIREBASE = process.env.NEXT_PUBLIC_USE_FIREBASE === 'true';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -24,7 +27,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function loadUser() {
     try {
-      // Verificar sessão diretamente
+      // Se estiver usando Firebase, usar onAuthStateChanged
+      if (USE_FIREBASE && typeof window !== 'undefined') {
+        // Firebase Auth state será gerenciado pelo useEffect com onAuthStateChanged
+        return;
+      }
+      
+      // Fluxo IndexedDB
       const db = await getDB();
       const session = await db.get('auth', 'current-user-id');
       
@@ -56,7 +65,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAuthenticated = !!user || isGuest;
 
   useEffect(() => {
-    loadUser();
+    // Se estiver usando Firebase, usar onAuthStateChanged
+    if (USE_FIREBASE && typeof window !== 'undefined') {
+      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        try {
+          if (firebaseUser) {
+            // Usuário autenticado no Firebase
+            const currentUser = await useCases.getCurrentUser.execute();
+            setUser(currentUser);
+            setIsGuest(false);
+          } else {
+            // Não autenticado
+            setUser(null);
+            setIsGuest(false);
+          }
+        } catch (error) {
+          console.error('Erro ao carregar usuário:', error);
+          setUser(null);
+          setIsGuest(false);
+        } finally {
+          setLoading(false);
+        }
+      });
+      
+      return () => unsubscribe();
+    } else {
+      // Fluxo IndexedDB
+      loadUser();
+    }
   }, []);
 
   return (

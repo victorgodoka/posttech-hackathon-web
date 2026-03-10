@@ -9,7 +9,15 @@ export class GetUserPreferences {
     
     if (!preferences) {
       const defaultPreferences = UserPreferences.createDefault(userId);
-      await this.preferencesRepository.save(defaultPreferences);
+      
+      // Tentar salvar as preferências padrão
+      // Se falhar (ex: usuário não autenticado no Firebase), apenas retornar as preferências padrão
+      try {
+        await this.preferencesRepository.save(defaultPreferences);
+      } catch (error) {
+        console.warn('Não foi possível salvar preferências padrão:', error);
+      }
+      
       return defaultPreferences;
     }
 

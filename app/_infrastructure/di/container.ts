@@ -13,6 +13,7 @@ import { PreferencesRepositoryFirebase } from '../persistence/firebase/Preferenc
 // Use Cases
 import { RegisterUser } from '@/app/_application/use-cases/RegisterUser';
 import { LoginUser } from '@/app/_application/use-cases/LoginUser';
+import { LoginWithGoogle } from '@/app/_application/use-cases/LoginWithGoogle';
 import { LogoutUser } from '@/app/_application/use-cases/LogoutUser';
 import { GetCurrentUser } from '@/app/_application/use-cases/GetCurrentUser';
 import { ContinueAsGuest } from '@/app/_application/use-cases/ContinueAsGuest';
@@ -42,8 +43,9 @@ const taskRepository = USE_FIREBASE ? new TaskRepositoryFirebase() : new TaskRep
 const preferencesRepository = USE_FIREBASE ? new PreferencesRepositoryFirebase() : new PreferencesRepositoryIDB();
 
 export const useCases = {
-  registerUser: new RegisterUser(userRepository),
+  registerUser: new RegisterUser(userRepository, USE_FIREBASE ? authRepository as any : undefined),
   loginUser: new LoginUser(userRepository, authRepository),
+  loginWithGoogle: USE_FIREBASE ? new LoginWithGoogle(userRepository, authRepository as any) : null,
   logoutUser: new LogoutUser(authRepository),
   getCurrentUser: new GetCurrentUser(userRepository, authRepository),
   continueAsGuest: new ContinueAsGuest(authRepository),

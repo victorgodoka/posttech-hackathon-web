@@ -19,7 +19,7 @@ export default function SettingsPage() {
     router.push('/welcome');
   }
 
-  if (loading) {
+  if (loading || !preferences) {
     return (
       <ProtectedRoute>
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-dark-bg-primary to-dark-bg-secondary">
@@ -27,10 +27,6 @@ export default function SettingsPage() {
         </div>
       </ProtectedRoute>
     );
-  }
-
-  if (!preferences) {
-    return null;
   }
 
   return (
