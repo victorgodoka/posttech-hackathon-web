@@ -48,28 +48,28 @@ describe('UserPreferences Entity - Extended Coverage', () => {
   });
 
   describe('updateNotificationTiming', () => {
-    it('should update notification timing to immediate', () => {
+    it('should update notification timing to focus-ends', () => {
       const prefs = UserPreferences.createDefault('user-1');
       
-      prefs.updateNotificationTiming('immediate');
+      prefs.updateNotificationTiming('focus-ends');
       
-      expect(prefs.notificationTiming).toBe('immediate');
+      expect(prefs.notificationTiming).toBe('focus-ends');
     });
 
-    it('should update notification timing to delayed', () => {
+    it('should update notification timing to long-breaks', () => {
       const prefs = UserPreferences.createDefault('user-1');
       
-      prefs.updateNotificationTiming('delayed');
+      prefs.updateNotificationTiming('long-breaks');
       
-      expect(prefs.notificationTiming).toBe('delayed');
+      expect(prefs.notificationTiming).toBe('long-breaks');
     });
 
-    it('should update notification timing to on-demand', () => {
+    it('should update notification timing to only-when-asked', () => {
       const prefs = UserPreferences.createDefault('user-1');
       
-      prefs.updateNotificationTiming('on-demand');
+      prefs.updateNotificationTiming('only-when-asked');
       
-      expect(prefs.notificationTiming).toBe('on-demand');
+      expect(prefs.notificationTiming).toBe('only-when-asked');
     });
   });
 
@@ -82,12 +82,12 @@ describe('UserPreferences Entity - Extended Coverage', () => {
       expect(prefs.taskCreationMode).toBe('simple');
     });
 
-    it('should update task creation mode to complete', () => {
+    it('should update task creation mode to full', () => {
       const prefs = UserPreferences.createDefault('user-1');
       
-      prefs.updateTaskCreationMode('complete');
+      prefs.updateTaskCreationMode('full');
       
-      expect(prefs.taskCreationMode).toBe('complete');
+      expect(prefs.taskCreationMode).toBe('full');
     });
   });
 
@@ -96,15 +96,15 @@ describe('UserPreferences Entity - Extended Coverage', () => {
       const now = new Date();
       const prefs = UserPreferences.fromPersistence({
         userId: 'user-1',
-        layoutMode: 'kanban',
+        layoutMode: 'custom',
         customColumns: [],
         allowExtraCustomColumns: true,
         overloadBehavior: 'suggest-move',
         visualComplexity: 'minimal',
-        informationDensity: 'summary',
+        informationDensity: 'complete',
         textSize: 'large',
-        notificationTiming: 'delayed',
-        taskCreationMode: 'complete',
+        notificationTiming: 'long-breaks',
+        taskCreationMode: 'full',
         pomodoroSettings: {
           workDuration: 30,
           breakDuration: 10,

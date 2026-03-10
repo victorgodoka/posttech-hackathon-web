@@ -14,7 +14,6 @@ describe('Auth Use Cases', () => {
 
   beforeEach(() => {
     mockUserRepository = {
-      findAll: jest.fn(),
       findById: jest.fn(),
       findByEmail: jest.fn(),
       save: jest.fn(),

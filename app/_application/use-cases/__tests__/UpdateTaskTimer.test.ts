@@ -1,10 +1,10 @@
 import { UpdateTaskTimer } from '../UpdateTaskTimer';
-import { TaskRepository } from '../../../_domain/repositories/TaskRepository';
+import { ITaskRepository } from '../../../_domain/repositories/ITaskRepository';
 import { Task } from '../../../_domain/entities/Task';
 
 describe('UpdateTaskTimer Use Case', () => {
   let updateTaskTimer: UpdateTaskTimer;
-  let mockRepository: jest.Mocked<TaskRepository>;
+  let mockRepository: jest.Mocked<ITaskRepository>;
   let mockTask: Task;
 
   beforeEach(() => {

@@ -67,10 +67,10 @@ describe('Preferences Use Cases', () => {
       mockRepository.findByUserId.mockResolvedValue(mockPreferences);
 
       const result = await updateUserPreferences.execute(userId, {
-        layoutMode: 'kanban',
+        layoutMode: 'complete',
       });
 
-      expect(result.layoutMode).toBe('kanban');
+      expect(result.layoutMode).toBe('complete');
       expect(mockRepository.save).toHaveBeenCalledWith(mockPreferences);
     });
 
@@ -93,10 +93,10 @@ describe('Preferences Use Cases', () => {
       mockRepository.findByUserId.mockResolvedValue(mockPreferences);
 
       const result = await updateUserPreferences.execute(userId, {
-        informationDensity: 'detailed',
+        informationDensity: 'complete',
       });
 
-      expect(result.informationDensity).toBe('detailed');
+      expect(result.informationDensity).toBe('complete');
       expect(mockRepository.save).toHaveBeenCalled();
     });
 
@@ -139,13 +139,13 @@ describe('Preferences Use Cases', () => {
         layoutMode: 'custom',
         visualComplexity: 'minimal',
         textSize: 'large',
-        taskCreationMode: 'complete',
+        taskCreationMode: 'full',
       });
 
       expect(result.layoutMode).toBe('custom');
       expect(result.visualComplexity).toBe('minimal');
       expect(result.textSize).toBe('large');
-      expect(result.taskCreationMode).toBe('complete');
+      expect(result.taskCreationMode).toBe('full');
       expect(mockRepository.save).toHaveBeenCalledTimes(1);
     });
 
@@ -154,11 +154,11 @@ describe('Preferences Use Cases', () => {
       mockRepository.findByUserId.mockResolvedValue(null);
 
       const result = await updateUserPreferences.execute(userId, {
-        layoutMode: 'kanban',
+        layoutMode: 'custom',
       });
 
       expect(result).toBeInstanceOf(UserPreferences);
-      expect(result.layoutMode).toBe('kanban');
+      expect(result.layoutMode).toBe('custom');
       expect(mockRepository.save).toHaveBeenCalled();
     });
 
@@ -168,10 +168,10 @@ describe('Preferences Use Cases', () => {
       mockRepository.findByUserId.mockResolvedValue(mockPreferences);
 
       const result = await updateUserPreferences.execute(userId, {
-        notificationTiming: 'immediate',
+        notificationTiming: 'focus-ends',
       });
 
-      expect(result.notificationTiming).toBe('immediate');
+      expect(result.notificationTiming).toBe('focus-ends');
       expect(mockRepository.save).toHaveBeenCalled();
     });
 

@@ -182,7 +182,7 @@ describe('Task Entity', () => {
         id: 'test-id',
         text: 'Test task',
         category: 'work',
-        state: 'active',
+        state: 'active' as const,
         createdAt: new Date().toISOString(),
         steps: [{ id: 'step-1', text: 'Step 1', completed: false }],
       };
@@ -199,7 +199,7 @@ describe('Task Entity', () => {
       const json = {
         id: 'test-id',
         text: 'Test task',
-        state: 'active',
+        state: 'active' as const,
         createdAt: new Date().toISOString(),
       };
 
