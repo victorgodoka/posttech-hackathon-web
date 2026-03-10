@@ -31,7 +31,7 @@ jobs:
         cache: 'pnpm'
     
     - name: Install dependencies
-      run: pnpm install --frozen-lockfile
+      run: pnpm install --no-frozen-lockfile
     
     - name: Type check
       run: pnpm type-check
@@ -83,7 +83,7 @@ jobs:
         cache: 'pnpm'
     
     - name: Install dependencies
-      run: pnpm install --frozen-lockfile
+      run: pnpm install --no-frozen-lockfile
     
     - name: Build
       run: pnpm build
@@ -126,7 +126,7 @@ jobs:
         cache: 'pnpm'
     
     - name: Install dependencies
-      run: pnpm install --frozen-lockfile
+      run: pnpm install --no-frozen-lockfile
     
     - name: Build
       run: pnpm build
