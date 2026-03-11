@@ -1,13 +1,13 @@
 # MindEase - Documentação Técnica
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/seu-usuario/mindease)
-[![Tests](https://img.shields.io/badge/tests-171%20passing-success)](https://github.com/seu-usuario/mindease)
-[![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)](https://github.com/seu-usuario/mindease)
+[![Tests](https://img.shields.io/badge/tests-185%20passing-success)](https://github.com/seu-usuario/mindease)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-**Sistema de Gerenciamento de Tarefas com Acessibilidade Cognitiva**
+**Plataforma de Acessibilidade Cognitiva para Pessoas Neurodivergentes**
 
-Aplicação web desenvolvida com **Clean Architecture**, **TypeScript** e **Next.js 16**, focada em redução de carga cognitiva através de controle adaptativo de interface e persistência offline-first.
+Aplicação web desenvolvida com **Clean Architecture**, **TypeScript** e **Next.js 16**, focada em redução de sobrecarga cognitiva para pessoas com TDAH, TEA, dislexia, burnout e ansiedade digital. Implementa controle adaptativo de interface, persistência offline-first e modo guest inteligente.
 
 ---
 
@@ -40,10 +40,13 @@ Gerenciadores de tarefas tradicionais aumentam sobrecarga cognitiva através de 
 ### Diferenciais Técnicos
 
 - **Clean Architecture**: Domínio isolado de frameworks, testável e manutenível
-- **Backend-agnostic**: Repositórios abstraídos, fácil migração para qualquer backend
+- **Backend-agnostic com Lazy Initialization**: Repositórios criados em runtime, detecta modo guest automaticamente
+- **Dual Backend**: IndexedDB (offline-first) + Firebase (opcional, sincronização)
+- **Modo Guest Inteligente**: Sem necessidade de criar conta, dados locais persistidos
 - **TypeScript strict mode**: Zero uso de `any`, interfaces tipadas para persistência
+- **185 testes passando**: Cobertura completa de domínio e casos de uso
 - **Acessibilidade estrutural**: ARIA, navegação por teclado, `prefers-reduced-motion`
-- **Offline-first**: Funciona sem conexão, sincronização futura preparada
+- **Offline-first**: Funciona 100% sem conexão, baixa latência garantida
 
 ---
 
@@ -233,7 +236,7 @@ app/
 | Tecnologia | Versão | Justificativa Técnica |
 |------------|--------|----------------------|
 | **Next.js** | 16.1.3 | App Router para SSR/SSG, otimização automática, file-based routing |
-| **TypeScript** | 5.x | Strict mode, type safety, melhor DX e refatoração |
+| **TypeScript** | 5.x | Strict mode, type safety, zero `any`, melhor DX e refatoração |
 | **React** | 19.x | Componentes reutilizáveis, hooks para estado e efeitos |
 
 ### Estilização e UI
@@ -245,7 +248,8 @@ app/
 ### Persistência e Estado
 | Tecnologia | Versão | Justificativa Técnica |
 |------------|--------|----------------------|
-| **IndexedDB (idb)** | 8.x | Offline-first, NoSQL local, suporta blobs e índices |
+| **IndexedDB (idb)** | 8.x | Offline-first, NoSQL local, suporta blobs e índices, modo guest |
+| **Firebase** | 11.x | Backend opcional para autenticação e sincronização (usuários autenticados) |
 | **React Context API** | - | Estado global sem overhead de Redux, suficiente para escopo |
 
 ### Funcionalidades Específicas
@@ -257,8 +261,11 @@ app/
 ### Qualidade e Desenvolvimento
 | Tecnologia | Versão | Justificativa Técnica |
 |------------|--------|----------------------|
+| **Jest** | 29.x | Framework de testes com 185 testes passando |
+| **Testing Library** | 16.x | Testes de componentes React focados em comportamento |
+| **fake-indexeddb** | 6.x | Mock de IndexedDB para testes |
 | **ESLint** | 9.x | Linting configurado para Next.js e TypeScript |
-| **TypeScript strict mode** | - | `noImplicitAny`, `strictNullChecks`, `strictFunctionTypes` habilitados |
+| **GitHub Actions** | - | CI/CD completo: type-check, lint, tests, build |
 
 ---
 
@@ -360,7 +367,7 @@ useEffect(() => {
 }, [preferences]);
 ```
 
-### 3. Persistência Backend-Agnostic
+### 3. Persistência Backend-Agnostic com Lazy Initialization
 
 #### Interface de Repositório (Domain)
 ```typescript
@@ -372,23 +379,47 @@ export interface ITaskRepository {
 }
 ```
 
-#### Implementação IndexedDB (Infrastructure)
+#### Implementações Disponíveis (Infrastructure)
 ```typescript
+// IndexedDB (offline-first, modo guest)
 export class TaskRepositoryIDB implements ITaskRepository {
   async findAll(): Promise<Task[]> {
     const db = await getDB();
     const data = await db.getAll('tasks');
     return data.map(Task.fromJSON);
   }
-  
-  async save(task: Task): Promise<void> {
-    const db = await getDB();
-    await db.put('tasks', task.toJSON());
+}
+
+// Firebase (usuários autenticados)
+export class TaskRepositoryFirebase implements ITaskRepository {
+  async findAll(): Promise<Task[]> {
+    const userId = this.getUserId();
+    const q = query(collection(db, 'tasks'), where('userId', '==', userId));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => Task.fromJSON(doc.data()));
   }
 }
 ```
 
-**Migração para Firebase/Supabase**: Basta criar `TaskRepositoryFirebase` implementando `ITaskRepository`. Nenhuma mudança no domínio ou casos de uso.
+#### Lazy Initialization com Detecção de Contexto
+```typescript
+// Container com getters que criam repositórios em runtime
+export const useCases = {
+  get addTask() {
+    return new AddTask(getTaskRepository()); // Decide IndexedDB ou Firebase
+  },
+};
+
+function getTaskRepository() {
+  // Modo guest → IndexedDB (mesmo com Firebase habilitado)
+  if (USE_FIREBASE && !isGuestMode()) {
+    return new TaskRepositoryFirebase();
+  }
+  return new TaskRepositoryIDB();
+}
+```
+
+**Migração para outro backend**: Basta criar nova implementação de `ITaskRepository`. Zero mudanças no domínio ou casos de uso.
 
 ### 4. Drag and Drop Acessível
 
@@ -453,12 +484,21 @@ O sistema cria automaticamente 3 object stores:
 
 ### Variáveis de Ambiente
 
-Nenhuma variável de ambiente é necessária para desenvolvimento local. Para produção com backend:
+**Modo IndexedDB (padrão)**: Nenhuma variável necessária. App funciona 100% offline.
 
+**Modo Firebase (opcional)**:
 ```env
-NEXT_PUBLIC_API_URL=https://api.example.com
-NEXT_PUBLIC_FIREBASE_CONFIG={...}  # Se usar Firebase
+NEXT_PUBLIC_USE_FIREBASE=true
+NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
 ```
+
+**Comportamento**:
+- `USE_FIREBASE=false` → Tudo em IndexedDB (offline-first)
+- `USE_FIREBASE=true` + modo guest → IndexedDB (local)
+- `USE_FIREBASE=true` + autenticado → Firebase (sincronizado)
 
 ---
 
@@ -477,18 +517,19 @@ NEXT_PUBLIC_FIREBASE_CONFIG={...}  # Se usar Firebase
 
 **Justificativa**: Para um projeto de hackathon com potencial de crescimento, a manutenibilidade e testabilidade compensam o overhead inicial.
 
-### 2. IndexedDB vs LocalStorage vs Backend Imediato
+### 2. IndexedDB + Firebase vs Backend Único
 
-**Decisão**: IndexedDB com arquitetura backend-agnostic
+**Decisão**: Dual backend com lazy initialization
 
 **Trade-offs**:
-- ✅ **Prós**: Offline-first, sem necessidade de servidor, NoSQL flexível
+- ✅ **Prós**: Offline-first, sem necessidade de servidor para modo guest
 - ✅ Suporta índices para queries eficientes
-- ✅ Armazena objetos complexos sem serialização manual
-- ❌ **Contras**: API assíncrona mais complexa que localStorage
-- ❌ Não sincroniza entre dispositivos (ainda)
+- ✅ Sincronização opcional via Firebase para usuários autenticados
+- ✅ Repositórios intercambiáveis em runtime (detecção automática de contexto)
+- ❌ **Contras**: Complexidade adicional de gerenciar dois backends
+- ❌ Necessita lógica de detecção de modo guest
 
-**Justificativa**: Acessibilidade cognitiva exige baixa latência. Offline-first garante experiência consistente. Repositórios abstraídos facilitam migração futura.
+**Justificativa**: Acessibilidade cognitiva exige baixa latência. Offline-first garante experiência consistente. Modo guest permite uso imediato sem fricção de cadastro.
 
 ### 3. Context API vs Redux/Zustand
 
@@ -619,11 +660,12 @@ try {
 |---------|-------|--------|
 | **TypeScript strict mode** | 100% | ✅ |
 | **Uso de `any`** | 0 ocorrências | ✅ |
+| **Testes passando** | 185/185 (100%) | ✅ |
+| **Suites de teste** | 20 suites | ✅ |
 | **ARIA labels** | 100% botões de ícone | ✅ |
 | **Navegação por teclado** | 100% interações | ✅ |
 | **Feedback visual** | 100% ações | ✅ |
-| **Testes unitários** | 0% (pendente) | ❌ |
-| **Cobertura de código** | N/A | ❌ |
+| **CI/CD** | GitHub Actions | ✅ |
 
 ---
 
@@ -685,6 +727,15 @@ try {
 | Texto secundário | `#94a3b8` | `#0f172a` | 7.2:1 | ✅ AA |
 | Botão primário | `#ffffff` | `#3b82f6` | 8.6:1 | ✅ AAA |
 | Botão hover | `#ffffff` | `#2563eb` | 10.1:1 | ✅ AAA |
+
+### Features de Acessibilidade Implementadas
+
+- ✅ **Modo Guest**: Sem necessidade de criar conta, uso imediato
+- ✅ **Offline-first**: 100% funcional sem internet
+- ✅ **Lazy Initialization**: Detecção automática de contexto (guest vs autenticado)
+- ✅ **Dual Backend**: IndexedDB (local) + Firebase (opcional)
+- ✅ **185 testes**: Cobertura completa de domínio e casos de uso
+- ✅ **CI/CD**: Pipeline completo com GitHub Actions
 
 ### Pendências de Acessibilidade
 
@@ -847,12 +898,25 @@ try {
 
 ## 🔮 Roadmap
 
-### ✅ Concluído
+### ✅ Concluído (v1.0)
+- ✅ Clean Architecture com 4 camadas
 - ✅ Modo customizado completo (colunas personalizáveis)
 - ✅ Timer Pomodoro customizável
 - ✅ Categorias de tarefas com ícones
 - ✅ Drag and drop entre colunas
 - ✅ Modo de criação simples/completo
+- ✅ Modo guest inteligente
+- ✅ Dual backend (IndexedDB + Firebase)
+- ✅ Lazy initialization de repositórios
+- ✅ 185 testes passando
+- ✅ CI/CD com GitHub Actions
+
+### 🚧 Próximos Passos
+- [ ] Versão mobile Flutter
+- [ ] Sincronização Web ↔️ Mobile
+- [ ] Notificações push gentis
+- [ ] Widgets nativos
+- [ ] Testes com usuários reais
 
 ---
 
