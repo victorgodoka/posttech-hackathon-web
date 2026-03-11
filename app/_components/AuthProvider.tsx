@@ -26,33 +26,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   async function loadUser() {
+    console.log('🔄 AuthProvider.loadUser: Iniciando...');
     try {
-      // Se estiver usando Firebase, usar onAuthStateChanged
-      if (USE_FIREBASE && typeof window !== 'undefined') {
-        // Firebase Auth state será gerenciado pelo useEffect com onAuthStateChanged
-        return;
-      }
-      
-      // Fluxo IndexedDB
+      // Verificar sessão no IndexedDB (funciona tanto para Firebase quanto IndexedDB)
       const db = await getDB();
       const session = await db.get('auth', 'current-user-id');
+      console.log('🔄 AuthProvider.loadUser: Sessão encontrada:', session);
       
       if (!session) {
+        console.log('🔄 AuthProvider.loadUser: Sem sessão');
         setUser(null);
         setIsGuest(false);
       } else if (session.value === GUEST_USER_ID) {
+        console.log('🔄 AuthProvider.loadUser: Modo GUEST detectado!');
         setUser(null);
         setIsGuest(true);
       } else {
+        console.log('🔄 AuthProvider.loadUser: Sessão de usuário real');
+        // Tem sessão de usuário real
+        if (USE_FIREBASE && typeof window !== 'undefined') {
+          // Firebase Auth state será gerenciado pelo useEffect com onAuthStateChanged
+          console.log('🔄 AuthProvider.loadUser: Firebase ativo, delegando para onAuthStateChanged');
+          return;
+        }
         const currentUser = await useCases.getCurrentUser.execute();
         setUser(currentUser);
         setIsGuest(false);
       }
     } catch (error) {
+      console.error('🔄 AuthProvider.loadUser: Erro:', error);
       setUser(null);
       setIsGuest(false);
     } finally {
       setLoading(false);
+      console.log('🔄 AuthProvider.loadUser: Concluído. isGuest:', isGuest);
     }
   }
 
@@ -75,9 +82,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(currentUser);
             setIsGuest(false);
           } else {
-            // Não autenticado
-            setUser(null);
-            setIsGuest(false);
+            // Não autenticado no Firebase - verificar se é guest
+            const db = await getDB();
+            const session = await db.get('auth', 'current-user-id');
+            
+            if (session?.value === GUEST_USER_ID) {
+              setUser(null);
+              setIsGuest(true);
+            } else {
+              setUser(null);
+              setIsGuest(false);
+            }
           }
         } catch (error) {
           console.error('Erro ao carregar usuário:', error);

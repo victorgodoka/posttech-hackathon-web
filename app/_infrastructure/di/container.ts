@@ -36,32 +36,99 @@ import { UpdateTaskCustomColumn } from '@/app/_application/use-cases/UpdateTaskC
 // Escolher backend baseado em variável de ambiente
 const USE_FIREBASE = process.env.NEXT_PUBLIC_USE_FIREBASE === 'true';
 
-// Instanciar repositórios baseado na escolha
-const userRepository = USE_FIREBASE ? new UserRepositoryFirebase() : new UserRepositoryIDB();
-const authRepository = USE_FIREBASE ? new AuthRepositoryFirebase() : new AuthRepositoryIDB();
-const taskRepository = USE_FIREBASE ? new TaskRepositoryFirebase() : new TaskRepositoryIDB();
-const preferencesRepository = USE_FIREBASE ? new PreferencesRepositoryFirebase() : new PreferencesRepositoryIDB();
+// Função para verificar se está no modo guest
+function isGuestMode(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const session = localStorage.getItem('guest-mode');
+    return session === 'true';
+  } catch {
+    return false;
+  }
+}
 
+// Lazy getters para repositórios
+function getUserRepository() {
+  return USE_FIREBASE ? new UserRepositoryFirebase() : new UserRepositoryIDB();
+}
+
+function getAuthRepository() {
+  return USE_FIREBASE ? new AuthRepositoryFirebase() : new AuthRepositoryIDB();
+}
+
+function getTaskRepository() {
+  // Tasks usam IndexedDB no modo guest
+  return (USE_FIREBASE && !isGuestMode()) ? new TaskRepositoryFirebase() : new TaskRepositoryIDB();
+}
+
+function getPreferencesRepository() {
+  // Preferences usam IndexedDB no modo guest
+  return (USE_FIREBASE && !isGuestMode()) ? new PreferencesRepositoryFirebase() : new PreferencesRepositoryIDB();
+}
+
+// Use cases com lazy initialization
 export const useCases = {
-  registerUser: new RegisterUser(userRepository, USE_FIREBASE ? authRepository as any : undefined),
-  loginUser: new LoginUser(userRepository, authRepository),
-  loginWithGoogle: USE_FIREBASE ? new LoginWithGoogle(userRepository, authRepository as any) : null,
-  logoutUser: new LogoutUser(authRepository),
-  getCurrentUser: new GetCurrentUser(userRepository, authRepository),
-  continueAsGuest: new ContinueAsGuest(authRepository),
-  addTask: new AddTask(taskRepository),
-  getTasks: new GetTasks(taskRepository),
-  updateTaskState: new UpdateTaskState(taskRepository),
-  deleteTask: new DeleteTask(taskRepository),
-  addTaskStep: new AddTaskStep(taskRepository),
-  toggleTaskStep: new ToggleTaskStep(taskRepository),
-  removeTaskStep: new RemoveTaskStep(taskRepository),
-  startTaskTimer: new StartTaskTimer(taskRepository),
-  pauseTaskTimer: new PauseTaskTimer(taskRepository),
-  resetTaskTimer: new ResetTaskTimer(taskRepository),
-  updateTaskTimer: new UpdateTaskTimer(taskRepository),
-  completeTimerCycle: new CompleteTimerCycle(taskRepository),
-  getUserPreferences: new GetUserPreferences(preferencesRepository),
-  updateUserPreferences: new UpdateUserPreferences(preferencesRepository),
-  updateTaskCustomColumn: new UpdateTaskCustomColumn(taskRepository),
+  get registerUser() {
+    return new RegisterUser(getUserRepository(), USE_FIREBASE ? getAuthRepository() as any : undefined);
+  },
+  get loginUser() {
+    return new LoginUser(getUserRepository(), getAuthRepository());
+  },
+  get loginWithGoogle() {
+    return USE_FIREBASE ? new LoginWithGoogle(getUserRepository(), getAuthRepository() as any) : null;
+  },
+  get logoutUser() {
+    return new LogoutUser(getAuthRepository());
+  },
+  get getCurrentUser() {
+    return new GetCurrentUser(getUserRepository(), getAuthRepository());
+  },
+  get continueAsGuest() {
+    return new ContinueAsGuest(getAuthRepository());
+  },
+  get addTask() {
+    return new AddTask(getTaskRepository());
+  },
+  get getTasks() {
+    return new GetTasks(getTaskRepository());
+  },
+  get updateTaskState() {
+    return new UpdateTaskState(getTaskRepository());
+  },
+  get deleteTask() {
+    return new DeleteTask(getTaskRepository());
+  },
+  get addTaskStep() {
+    return new AddTaskStep(getTaskRepository());
+  },
+  get toggleTaskStep() {
+    return new ToggleTaskStep(getTaskRepository());
+  },
+  get removeTaskStep() {
+    return new RemoveTaskStep(getTaskRepository());
+  },
+  get startTaskTimer() {
+    return new StartTaskTimer(getTaskRepository());
+  },
+  get pauseTaskTimer() {
+    return new PauseTaskTimer(getTaskRepository());
+  },
+  get resetTaskTimer() {
+    return new ResetTaskTimer(getTaskRepository());
+  },
+  get updateTaskTimer() {
+    return new UpdateTaskTimer(getTaskRepository());
+  },
+  get completeTimerCycle() {
+    return new CompleteTimerCycle(getTaskRepository());
+  },
+  get getUserPreferences() {
+    return new GetUserPreferences(getPreferencesRepository());
+  },
+  get updateUserPreferences() {
+    return new UpdateUserPreferences(getPreferencesRepository());
+  },
+  get updateTaskCustomColumn() {
+    return new UpdateTaskCustomColumn(getTaskRepository());
+  },
 };

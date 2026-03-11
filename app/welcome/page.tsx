@@ -30,8 +30,11 @@ export default function WelcomePage() {
   }, []);
 
   async function handleContinue(mode?: StartMode) {
+    console.log('👋 WelcomePage: Iniciando modo convidado...');
     await useCases.continueAsGuest.execute();
+    console.log('👋 WelcomePage: ContinueAsGuest executado, chamando refresh...');
     await refresh();
+    console.log('👋 WelcomePage: Refresh concluído, redirecionando para dashboard...');
     router.push('/dashboard');
   }
 
